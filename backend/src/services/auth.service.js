@@ -33,9 +33,11 @@ class AuthService {
             role: taiKhoan.role
         });
 
+        const thongTinChiTiet = await TaiKhoanModel.timTheoId(taiKhoan.id);
+
         return {
             token,
-            nguoiDung: {
+            nguoiDung: thongTinChiTiet || {
                 id: taiKhoan.id,
                 ten_dang_nhap: taiKhoan.ten_dang_nhap,
                 email: taiKhoan.email,

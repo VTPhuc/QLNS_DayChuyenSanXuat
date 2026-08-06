@@ -4,14 +4,16 @@ import api from "../../../api.js";
 
 export default function QuanLyTangCa() {
     const { nguoiDung } = useAuth();
+    const laAdmin = nguoiDung && nguoiDung.role === "ADMIN";
     const laLeader = nguoiDung && ["ADMIN", "LEADER_KHU_VUC", "LEADER_LINE", "MANAGER"].includes(nguoiDung.role);
+    const userCaLamId = nguoiDung?.ca_lam_id ? String(nguoiDung.ca_lam_id) : "";
 
     const todayStr = new Date().toISOString().split("T")[0];
 
     // Filters
     const [ngayLoc, setNgayLoc] = useState(todayStr);
     const [dayChuyenLoc, setDayChuyenLoc] = useState("");
-    const [caLamLoc, setCaLamLoc] = useState("");
+    const [caLamLoc, setCaLamLoc] = useState(!laAdmin && userCaLamId ? userCaLamId : "");
     const [trangThaiLoc, setTrangThaiLoc] = useState("");
     const [tuKhoa, setTuKhoa] = useState("");
 
@@ -88,6 +90,12 @@ export default function QuanLyTangCa() {
     }, [taiDanhSachTangCa]);
 
     useEffect(() => {
+        if (!laAdmin && userCaLamId) {
+            setCaLamLoc(userCaLamId);
+        }
+    }, [laAdmin, userCaLamId]);
+
+    useEffect(() => {
         if (thongBao) {
             const timer = setTimeout(() => setThongBao(""), 4000);
             return () => clearTimeout(timer);
@@ -140,11 +148,14 @@ export default function QuanLyTangCa() {
 
     // Open Modal Đăng ký tăng ca
     const hienModalDangKyForm = () => {
+        const caLamDefault = (!laAdmin && userCaLamId)
+            ? userCaLamId
+            : (caLamLoc || (danhSachCaLam.length > 0 ? String(danhSachCaLam[0].id) : ""));
         setFormDangKy({
             cheDo: "CAN_HANH",
             day_chuyen_id: danhSachDayChuyen.length > 0 ? danhSachDayChuyen[0].id : "",
             nhan_vien_ids: [],
-            ca_lam_id: danhSachCaLam.length > 0 ? danhSachCaLam[0].id : "",
+            ca_lam_id: caLamDefault,
             ngay: ngayLoc || todayStr,
             trang_thai: "DA_DUYET"
         });
@@ -326,9 +337,17 @@ export default function QuanLyTangCa() {
                 <select
                     value={caLamLoc}
                     onChange={(e) => setCaLamLoc(e.target.value)}
-                    style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
+                    disabled={!laAdmin && Boolean(userCaLamId)}
+                    style={{
+                        padding: "8px 12px",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "var(--radius)",
+                        background: (!laAdmin && userCaLamId) ? "#f1f5f9" : "#fff",
+                        cursor: (!laAdmin && userCaLamId) ? "not-allowed" : "pointer"
+                    }}
+                    title={!laAdmin && userCaLamId ? "Ca làm việc cố định của bạn (Không thể đổi)" : "Chọn ca làm việc"}
                 >
-                    <option value="">-- Tất cả ca làm --</option>
+                    <option value="">{laAdmin ? "-- Tất cả ca làm --" : "-- Ca làm của bạn --"}</option>
                     {danhSachCaLam.map((cl) => (
                         <option key={cl.id} value={cl.id}>
                             {cl.ten_ca} ({cl.gio_bat_dau?.substring(0, 5)} - {cl.gio_ket_thuc?.substring(0, 5)})
@@ -530,8 +549,13 @@ export default function QuanLyTangCa() {
                                         <label>Chọn Ca làm / Ca tăng ca (*):</label>
                                         <select
                                             required
+                                            disabled={!laAdmin && Boolean(userCaLamId)}
                                             value={formDangKy.ca_lam_id}
-                                            onChange={(e) => setFormDangKy({ ...formDangKy, ca_lam_id: e.target.value })}
+                                            onChange={(e) => setFormDangKy({ ...formDangKy, ca_lam_id: e.target.value, nhan_vien_ids: [] })}
+                                            style={{
+                                                background: (!laAdmin && userCaLamId) ? "#f1f5f9" : "#fff",
+                                                cursor: (!laAdmin && userCaLamId) ? "not-allowed" : "pointer"
+                                            }}
                                         >
                                             {danhSachCaLam.map((cl) => (
                                                 <option key={cl.id} value={cl.id}>
@@ -604,29 +628,44 @@ export default function QuanLyTangCa() {
                                                 background: "#fff"
                                             }}
                                         >
-                                            {danhSachNhanVien.map((nv) => (
-                                                <label
-                                                    key={nv.id}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: "8px",
-                                                        padding: "4px 0",
-                                                        borderBottom: "1px solid #f1f5f9",
-                                                        cursor: "pointer",
-                                                        fontSize: "13px"
-                                                    }}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formDangKy.nhan_vien_ids.includes(nv.id)}
-                                                        onChange={() => xuLyNhanVienSelection(nv.id)}
-                                                    />
-                                                    <span>
-                                                        <strong>{nv.ho_ten}</strong> ({nv.ma_nhan_vien || "NV"}) - {nv.ten_day_chuyen || "Tự do"}
-                                                    </span>
-                                                </label>
-                                            ))}
+                                            {(() => {
+                                                const nhanVienTheoCa = danhSachNhanVien.filter((nv) => {
+                                                    if (!formDangKy.ca_lam_id) return true;
+                                                    return String(nv.ca_lam_id) === String(formDangKy.ca_lam_id);
+                                                });
+
+                                                if (nhanVienTheoCa.length === 0) {
+                                                    return (
+                                                        <div style={{ padding: "12px", color: "var(--text-muted)", textAlign: "center", fontSize: "13px" }}>
+                                                            ⚠️ Không có nhân viên nào thuộc ca làm được chọn
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return nhanVienTheoCa.map((nv) => (
+                                                    <label
+                                                        key={nv.id}
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: "8px",
+                                                            padding: "4px 0",
+                                                            borderBottom: "1px solid #f1f5f9",
+                                                            cursor: "pointer",
+                                                            fontSize: "13px"
+                                                        }}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formDangKy.nhan_vien_ids.includes(nv.id)}
+                                                            onChange={() => xuLyNhanVienSelection(nv.id)}
+                                                        />
+                                                        <span>
+                                                            <strong>{nv.ho_ten}</strong> ({nv.ma_nhan_vien || "NV"}) - {nv.ten_day_chuyen || "Tự do"}
+                                                        </span>
+                                                    </label>
+                                                ));
+                                            })()}
                                         </div>
                                     </div>
                                 )}

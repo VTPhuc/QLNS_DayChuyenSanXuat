@@ -4,11 +4,12 @@ import pool from "../config/db.js";
  * Model quản lý dữ liệu nhân viên
  */
 class NhanVienModel {
-    static async layDanhSachNhanVien({ q, day_chuyen_id, trang_thai }) {
+    static async layDanhSachNhanVien({ q, day_chuyen_id, ca_lam_id, trang_thai }) {
         let sql = `
-            SELECT nv.*, dc.ten_day_chuyen, tk.ten_dang_nhap, tk.email
+            SELECT nv.*, dc.ten_day_chuyen, cl.ten_ca AS ten_ca_lam, tk.ten_dang_nhap, tk.email
             FROM nhan_vien nv
             LEFT JOIN day_chuyen dc ON nv.day_chuyen_id = dc.id
+            LEFT JOIN ca_lam_viec cl ON nv.ca_lam_id = cl.id
             LEFT JOIN tai_khoan tk ON nv.tai_khoan_id = tk.id
             WHERE 1=1
         `;
@@ -23,6 +24,11 @@ class NhanVienModel {
         if (day_chuyen_id) {
             sql += " AND nv.day_chuyen_id = ?";
             params.push(day_chuyen_id);
+        }
+
+        if (ca_lam_id) {
+            sql += " AND nv.ca_lam_id = ?";
+            params.push(ca_lam_id);
         }
 
         if (trang_thai) {

@@ -4,13 +4,15 @@ import api from "../../../api.js";
 
 export default function PhanBoTangCa() {
     const { nguoiDung } = useAuth();
+    const laAdmin = nguoiDung && nguoiDung.role === "ADMIN";
     const laLeader = nguoiDung && ["ADMIN", "LEADER_KHU_VUC", "LEADER_LINE", "MANAGER"].includes(nguoiDung.role);
+    const userCaLamId = nguoiDung?.ca_lam_id ? String(nguoiDung.ca_lam_id) : "";
 
     const todayStr = new Date().toISOString().split("T")[0];
 
     // Bộ lọc chính
     const [ngay, setNgay] = useState(todayStr);
-    const [caLamId, setCaLamId] = useState("");
+    const [caLamId, setCaLamId] = useState(!laAdmin && userCaLamId ? userCaLamId : "");
     const [dayChuyenId, setDayChuyenId] = useState("");
     const [tuKhoaNv, setTuKhoaNv] = useState("");
     const [tabFilterNv, setTabFilterNv] = useState("TAT_CA"); // "TAT_CA" | "CHUA_GAN" | "GAN_LINE_NAY" | "GAN_LINE_KHAC"
@@ -40,8 +42,12 @@ export default function PhanBoTangCa() {
             }
             if (resCa.success && resCa.data && resCa.data.length > 0) {
                 setDanhSachCaLam(resCa.data);
-                const caTangCa = resCa.data.find(c => c.loai_ca === "TANG_CA");
-                setCaLamId((prev) => prev || String(caTangCa ? caTangCa.id : resCa.data[0].id));
+                if (!laAdmin && userCaLamId) {
+                    setCaLamId(userCaLamId);
+                } else {
+                    const caTangCa = resCa.data.find(c => c.loai_ca === "TANG_CA");
+                    setCaLamId((prev) => prev || String(caTangCa ? caTangCa.id : resCa.data[0].id));
+                }
             }
         } catch (err) {
             console.error("Lỗi khi tải lookup:", err);
@@ -90,6 +96,12 @@ export default function PhanBoTangCa() {
     useEffect(() => {
         taiDanhSachNhanSuTangCa();
     }, [taiDanhSachNhanSuTangCa]);
+
+    useEffect(() => {
+        if (!laAdmin && userCaLamId) {
+            setCaLamId(userCaLamId);
+        }
+    }, [laAdmin, userCaLamId]);
 
     useEffect(() => {
         if (thongBao) {
@@ -178,13 +190,17 @@ export default function PhanBoTangCa() {
     );
     const unassignedStaff = danhSachNhanSuTangCa.filter((x) => !x.phan_cong_id);
 
-    // Lọc danh sách nhân sự cột trái theo từ khóa và tab
+    // Lọc danh sách nhân sự cột trái theo từ khóa, ca làm và tab
     const filteredNhanSuList = danhSachNhanSuTangCa.filter((nv) => {
         const matchesKw = !tuKhoaNv.trim() ||
             nv.ho_ten?.toLowerCase().includes(tuKhoaNv.toLowerCase()) ||
             nv.ma_nhan_vien?.toLowerCase().includes(tuKhoaNv.toLowerCase());
 
         if (!matchesKw) return false;
+
+        if (caLamId && String(nv.nv_ca_lam_id || nv.ca_lam_id) !== String(caLamId)) {
+            return false;
+        }
 
         const isCurrentLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) === String(dayChuyenId);
         const isOtherLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) !== String(dayChuyenId);
@@ -269,7 +285,15 @@ export default function PhanBoTangCa() {
                     <select
                         value={caLamId}
                         onChange={(e) => setCaLamId(e.target.value)}
-                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
+                        disabled={!laAdmin && Boolean(userCaLamId)}
+                        style={{
+                            padding: "8px 12px",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: "var(--radius)",
+                            background: (!laAdmin && userCaLamId) ? "#f1f5f9" : "#fff",
+                            cursor: (!laAdmin && userCaLamId) ? "not-allowed" : "pointer"
+                        }}
+                        title={!laAdmin && userCaLamId ? "Ca làm việc cố định của bạn (Không thể đổi)" : "Chọn ca tăng ca"}
                     >
                         {danhSachCaLam.map((cl) => (
                             <option key={cl.id} value={cl.id}>
