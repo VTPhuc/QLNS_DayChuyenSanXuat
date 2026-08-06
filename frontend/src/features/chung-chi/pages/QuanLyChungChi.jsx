@@ -32,8 +32,10 @@ export default function QuanLyChungChi() {
     // Modal Gán Chứng chỉ Nhân viên
     const [hienModalGan, setHienModalGan] = useState(false);
     const [modalGanCheDo, setModalGanCheDo] = useState("THEM"); // "THEM" | "SUA"
+    const [tuKhoaTimNvGan, setTuKhoaTimNvGan] = useState("");
     const [formGan, setFormGan] = useState({
         id: null,
+        nhan_vien_ids: [],
         nhan_vien_id: "",
         chung_chi_id: "",
         cap_do: 1,
@@ -157,9 +159,11 @@ export default function QuanLyChungChi() {
 
     // Handlers Gán Chứng chỉ Nhân viên
     const hienModalThemGan = () => {
+        setTuKhoaTimNvGan("");
         setFormGan({
             id: null,
-            nhan_vien_id: danhSachNhanVien.length > 0 ? danhSachNhanVien[0].id : "",
+            nhan_vien_ids: [],
+            nhan_vien_id: "",
             chung_chi_id: danhSachChungChi.length > 0 ? danhSachChungChi[0].id : "",
             cap_do: 1,
             ngay_cap: new Date().toISOString().split("T")[0],
@@ -173,6 +177,7 @@ export default function QuanLyChungChi() {
     const hienModalSuaGan = (item) => {
         setFormGan({
             id: item.id,
+            nhan_vien_ids: [item.nhan_vien_id],
             nhan_vien_id: item.nhan_vien_id,
             chung_chi_id: item.chung_chi_id,
             cap_do: item.cap_do || 1,
@@ -184,14 +189,57 @@ export default function QuanLyChungChi() {
         setHienModalGan(true);
     };
 
+    const xuLyChonNvGan = (id) => {
+        const numId = Number(id);
+        if (formGan.nhan_vien_ids.includes(numId)) {
+            setFormGan({
+                ...formGan,
+                nhan_vien_ids: formGan.nhan_vien_ids.filter((x) => x !== numId)
+            });
+        } else {
+            setFormGan({
+                ...formGan,
+                nhan_vien_ids: [...formGan.nhan_vien_ids, numId]
+            });
+        }
+    };
+
+    const xuLyChonTatCaNvGan = (danhSachFiltered) => {
+        const idsFiltered = danhSachFiltered.map((nv) => nv.id);
+        const allSelected = idsFiltered.every((id) => formGan.nhan_vien_ids.includes(id));
+
+        if (allSelected) {
+            setFormGan({
+                ...formGan,
+                nhan_vien_ids: formGan.nhan_vien_ids.filter((id) => !idsFiltered.includes(id))
+            });
+        } else {
+            setFormGan({
+                ...formGan,
+                nhan_vien_ids: Array.from(new Set([...formGan.nhan_vien_ids, ...idsFiltered]))
+            });
+        }
+    };
+
     const xuLyLuuGan = async (e) => {
         e.preventDefault();
         setLoi("");
         try {
             if (modalGanCheDo === "THEM") {
+                if (formGan.nhan_vien_ids.length === 0) {
+                    setLoi("Vui lòng chọn ít nhất 1 nhân viên để gán chứng chỉ");
+                    return;
+                }
                 const res = await api("/chung-chi/nhan-vien", {
                     method: "POST",
-                    body: JSON.stringify(formGan)
+                    body: JSON.stringify({
+                        nhan_vien_ids: formGan.nhan_vien_ids,
+                        chung_chi_id: formGan.chung_chi_id,
+                        cap_do: formGan.cap_do,
+                        ngay_cap: formGan.ngay_cap,
+                        ngay_het_han: formGan.ngay_het_han,
+                        trang_thai: formGan.trang_thai
+                    })
                 });
                 setThongBao(res.message || "Gán chứng chỉ cho nhân viên thành công");
             } else {
@@ -657,21 +705,6 @@ export default function QuanLyChungChi() {
                                 {modalGanCheDo === "THEM" ? (
                                     <>
                                         <div className="nhom-o-nhap">
-                                            <label>Chọn Nhân viên (*):</label>
-                                            <select
-                                                required
-                                                value={formGan.nhan_vien_id}
-                                                onChange={(e) => setFormGan({ ...formGan, nhan_vien_id: e.target.value })}
-                                            >
-                                                <option value="">-- Chọn nhân viên --</option>
-                                                {danhSachNhanVien.map((nv) => (
-                                                    <option key={nv.id} value={nv.id}>
-                                                        {nv.ma_nhan_vien ? `[${nv.ma_nhan_vien}] ` : ""}{nv.ho_ten} {nv.ten_day_chuyen ? `(${nv.ten_day_chuyen})` : ""}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="nhom-o-nhap">
                                             <label>Chọn Loại Chứng chỉ (*):</label>
                                             <select
                                                 required
@@ -685,6 +718,101 @@ export default function QuanLyChungChi() {
                                                     </option>
                                                 ))}
                                             </select>
+                                        </div>
+
+                                        {/* Chọn nhiều Nhân viên */}
+                                        <div className="nhom-o-nhap">
+                                            {(() => {
+                                                const dsNvFiltered = danhSachNhanVien.filter((nv) => {
+                                                    if (!tuKhoaTimNvGan.trim()) return true;
+                                                    const kw = tuKhoaTimNvGan.toLowerCase();
+                                                    return (
+                                                        nv.ho_ten?.toLowerCase().includes(kw) ||
+                                                        nv.ma_nhan_vien?.toLowerCase().includes(kw) ||
+                                                        nv.ten_day_chuyen?.toLowerCase().includes(kw) ||
+                                                        nv.ten_ca_lam?.toLowerCase().includes(kw)
+                                                    );
+                                                });
+                                                const allChecked = dsNvFiltered.length > 0 && dsNvFiltered.every((nv) => formGan.nhan_vien_ids.includes(nv.id));
+
+                                                return (
+                                                    <>
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                                                            <label style={{ margin: 0, fontWeight: "bold" }}>
+                                                                Chọn Nhân viên (*):{" "}
+                                                                <span style={{ fontSize: "12px", background: "#e2e8f0", color: "#0f172a", padding: "2px 8px", borderRadius: "10px", fontWeight: "bold" }}>
+                                                                    Đã chọn: {formGan.nhan_vien_ids.length} nhân viên
+                                                                </span>
+                                                            </label>
+                                                            <button
+                                                                type="button"
+                                                                style={{ fontSize: "12px", background: "none", border: "none", color: "var(--amber-dark)", cursor: "pointer", textDecoration: "underline", fontWeight: "bold" }}
+                                                                onClick={() => xuLyChonTatCaNvGan(dsNvFiltered)}
+                                                            >
+                                                                {allChecked ? "❌ Bỏ chọn tất cả" : "✅ Chọn tất cả (kết quả lọc)"}
+                                                            </button>
+                                                        </div>
+
+                                                        <input
+                                                            type="text"
+                                                            placeholder="🔍 Tìm nhân viên theo tên, mã NV, dây chuyền, ca..."
+                                                            value={tuKhoaTimNvGan}
+                                                            onChange={(e) => setTuKhoaTimNvGan(e.target.value)}
+                                                            style={{
+                                                                width: "100%",
+                                                                padding: "7px 10px",
+                                                                marginBottom: "8px",
+                                                                fontSize: "13px",
+                                                                border: "1px solid #cbd5e1",
+                                                                borderRadius: "var(--radius)"
+                                                            }}
+                                                        />
+
+                                                        <div
+                                                            style={{
+                                                                maxHeight: "200px",
+                                                                overflowY: "auto",
+                                                                border: "1px solid #d3d7de",
+                                                                borderRadius: "var(--radius)",
+                                                                padding: "8px 12px",
+                                                                background: "#fff"
+                                                            }}
+                                                        >
+                                                            {dsNvFiltered.length === 0 ? (
+                                                                <div style={{ textAlign: "center", padding: "12px", color: "var(--text-muted)", fontSize: "13px" }}>
+                                                                    Không tìm thấy nhân viên nào phù hợp
+                                                                </div>
+                                                            ) : (
+                                                                dsNvFiltered.map((nv) => (
+                                                                    <label
+                                                                        key={nv.id}
+                                                                        style={{
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            gap: "8px",
+                                                                            padding: "6px 0",
+                                                                            borderBottom: "1px solid #f1f5f9",
+                                                                            cursor: "pointer",
+                                                                            fontSize: "13px"
+                                                                        }}
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={formGan.nhan_vien_ids.includes(nv.id)}
+                                                                            onChange={() => xuLyChonNvGan(nv.id)}
+                                                                        />
+                                                                        <span>
+                                                                            <strong>{nv.ho_ten}</strong> ({nv.ma_nhan_vien || "NV"})
+                                                                            {nv.ten_day_chuyen ? <span style={{ color: "var(--steel)", marginLeft: "6px" }}>- Line: {nv.ten_day_chuyen}</span> : ""}
+                                                                            {nv.ten_ca_lam ? <span style={{ color: "#d97706", marginLeft: "6px", fontWeight: "600" }}>- {nv.ten_ca_lam}</span> : ""}
+                                                                        </span>
+                                                                    </label>
+                                                                ))
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
                                     </>
                                 ) : (

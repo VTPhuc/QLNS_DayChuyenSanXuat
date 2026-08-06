@@ -150,29 +150,55 @@ class ChungChiService {
     }
 
     /**
-     * Gán chứng chỉ cho nhân viên (hoặc cập nhật nếu đã gán)
+     * Gán chứng chỉ cho 1 hoặc nhiều nhân viên (hoặc cập nhật nếu đã gán)
      */
-    static async ganChungChiNhanVien({ nhan_vien_id, chung_chi_id, cap_do = 1, ngay_cap, ngay_het_han, trang_thai = 'HIEU_LUC' }) {
-        if (!nhan_vien_id || !chung_chi_id) {
-            throw new Error("Nhân viên và Chứng chỉ là bắt buộc");
+    static async ganChungChiNhanVien({ nhan_vien_id, nhan_vien_ids, chung_chi_id, cap_do = 1, ngay_cap, ngay_het_han, trang_thai = 'HIEU_LUC' }) {
+        if (!chung_chi_id) {
+            throw new Error("Chứng chỉ là bắt buộc");
+        }
+
+        let nvIds = [];
+        if (Array.isArray(nhan_vien_ids)) {
+            nvIds = nhan_vien_ids.map(id => Number(id)).filter(id => Boolean(id));
+        } else if (nhan_vien_id) {
+            nvIds = [Number(nhan_vien_id)];
+        }
+
+        if (nvIds.length === 0) {
+            throw new Error("Vui lòng chọn ít nhất một nhân viên để gán chứng chỉ");
         }
 
         const capDoNum = Number(cap_do) || 1;
         const ngayCapVal = ngay_cap ? ngay_cap : new Date().toISOString().split('T')[0];
         const ngayHetHanVal = ngay_het_han ? ngay_het_han : null;
 
-        const [result] = await pool.query(
-            `INSERT INTO chung_chi_nhan_vien (nhan_vien_id, chung_chi_id, cap_do, ngay_cap, ngay_het_han, trang_thai)
-             VALUES (?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE 
-                cap_do = VALUES(cap_do), 
-                ngay_cap = VALUES(ngay_cap), 
-                ngay_het_han = VALUES(ngay_het_han), 
-                trang_thai = VALUES(trang_thai)`,
-            [nhan_vien_id, chung_chi_id, capDoNum, ngayCapVal, ngayHetHanVal, trang_thai]
-        );
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            let successCount = 0;
 
-        return { id: result.insertId || result.id, nhan_vien_id, chung_chi_id, cap_do: capDoNum, ngay_cap: ngayCapVal, ngay_het_han: ngayHetHanVal, trang_thai };
+            for (const idNv of nvIds) {
+                await connection.query(
+                    `INSERT INTO chung_chi_nhan_vien (nhan_vien_id, chung_chi_id, cap_do, ngay_cap, ngay_het_han, trang_thai)
+                     VALUES (?, ?, ?, ?, ?, ?)
+                     ON DUPLICATE KEY UPDATE 
+                        cap_do = VALUES(cap_do), 
+                        ngay_cap = VALUES(ngay_cap), 
+                        ngay_het_han = VALUES(ngay_het_han), 
+                        trang_thai = VALUES(trang_thai)`,
+                    [idNv, chung_chi_id, capDoNum, ngayCapVal, ngayHetHanVal, trang_thai]
+                );
+                successCount++;
+            }
+
+            await connection.commit();
+            return { successCount, total: nvIds.length, chung_chi_id, cap_do: capDoNum, ngay_cap: ngayCapVal, ngay_het_han: ngayHetHanVal, trang_thai };
+        } catch (err) {
+            await connection.rollback();
+            throw err;
+        } finally {
+            connection.release();
+        }
     }
 
     /**

@@ -74,16 +74,17 @@ class ChungChiController {
 
     static async ganChungChiNhanVien(req, res, next) {
         try {
-            const { nhan_vien_id, chung_chi_id, cap_do, ngay_cap, ngay_het_han, trang_thai } = req.body;
+            const { nhan_vien_id, nhan_vien_ids, chung_chi_id, cap_do, ngay_cap, ngay_het_han, trang_thai } = req.body;
             const data = await ChungChiService.ganChungChiNhanVien({
                 nhan_vien_id,
+                nhan_vien_ids,
                 chung_chi_id,
                 cap_do,
                 ngay_cap,
                 ngay_het_han,
                 trang_thai
             });
-            return res.json({ success: true, message: "Gán chứng chỉ cho nhân viên thành công", data });
+            return res.json({ success: true, message: `Gán chứng chỉ thành công cho ${data.successCount || 1} nhân viên`, data });
         } catch (err) {
             next(err);
         }

@@ -8,14 +8,23 @@ class TangCaService {
     static async layDanhSachDangKyTangCa({ ngay, day_chuyen_id, ca_lam_id, trang_thai, q } = {}) {
         let sql = `
             SELECT dk.id, dk.nhan_vien_id, dk.ca_lam_id, dk.ngay, dk.trang_thai,
+<<<<<<< HEAD
                    nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.so_dien_thoai, nv.day_chuyen_id, nv.ca_lam_id AS nv_ca_lam_id,
+=======
+                   nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.so_dien_thoai, nv.day_chuyen_id, nv.ca_lam_id AS ca_lam_goc_id,
+                   cl_goc.ten_ca AS ten_ca_goc,
+>>>>>>> upstream/main
                    dc.ten_day_chuyen,
                    cl.ten_ca, cl.gio_bat_dau, cl.gio_ket_thuc, cl.loai_ca,
                    cl_nv.ten_ca AS ten_ca_goc
             FROM dang_ky_tang_ca dk
             JOIN nhan_vien nv ON dk.nhan_vien_id = nv.id
             JOIN ca_lam_viec cl ON dk.ca_lam_id = cl.id
+<<<<<<< HEAD
             LEFT JOIN ca_lam_viec cl_nv ON nv.ca_lam_id = cl_nv.id
+=======
+            LEFT JOIN ca_lam_viec cl_goc ON nv.ca_lam_id = cl_goc.id
+>>>>>>> upstream/main
             LEFT JOIN day_chuyen dc ON nv.day_chuyen_id = dc.id
             WHERE 1=1
         `;
@@ -170,8 +179,13 @@ class TangCaService {
 
         let sql = `
             SELECT dk.id AS dang_ky_id, dk.nhan_vien_id, dk.ca_lam_id, dk.ngay,
+<<<<<<< HEAD
                    nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.day_chuyen_id AS day_chuyen_goc_id, nv.ca_lam_id AS nv_ca_lam_id,
+=======
+                   nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.day_chuyen_id AS day_chuyen_goc_id, nv.ca_lam_id AS ca_lam_goc_id,
+>>>>>>> upstream/main
                    dc_goc.ten_day_chuyen AS ten_day_chuyen_goc,
+                   cl_goc.ten_ca AS ten_ca_goc,
                    cl.ten_ca, cl.gio_bat_dau, cl.gio_ket_thuc,
                    pc.id AS phan_cong_id, pc.day_chuyen_id AS phan_cong_day_chuyen_id, pc.cong_doan_id,
                    dc_pc.ten_day_chuyen AS ten_day_chuyen_phan_cong,
@@ -179,6 +193,7 @@ class TangCaService {
             FROM dang_ky_tang_ca dk
             JOIN nhan_vien nv ON dk.nhan_vien_id = nv.id
             JOIN ca_lam_viec cl ON dk.ca_lam_id = cl.id
+            LEFT JOIN ca_lam_viec cl_goc ON nv.ca_lam_id = cl_goc.id
             LEFT JOIN day_chuyen dc_goc ON nv.day_chuyen_id = dc_goc.id
             LEFT JOIN phan_cong_nhan_su pc ON (pc.nhan_vien_id = nv.id AND pc.ca_lam_id = dk.ca_lam_id AND pc.ngay = dk.ngay)
             LEFT JOIN day_chuyen dc_pc ON pc.day_chuyen_id = dc_pc.id

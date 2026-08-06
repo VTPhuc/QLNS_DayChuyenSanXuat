@@ -4,7 +4,12 @@ import api from "../../../api.js";
 
 export default function PhanBoTangCa() {
     const { nguoiDung } = useAuth();
+<<<<<<< HEAD
     const laAdmin = nguoiDung && nguoiDung.role === "ADMIN";
+=======
+    const laAdmin = nguoiDung && (nguoiDung.role === "ADMIN" || nguoiDung.role === "MANAGER");
+    const laLeaderOnly = nguoiDung && (nguoiDung.role === "LEADER_LINE" || nguoiDung.role === "LEADER_KHU_VUC");
+>>>>>>> upstream/main
     const laLeader = nguoiDung && ["ADMIN", "LEADER_KHU_VUC", "LEADER_LINE", "MANAGER"].includes(nguoiDung.role);
     const userCaLamId = nguoiDung?.ca_lam_id ? String(nguoiDung.ca_lam_id) : "";
 
@@ -15,7 +20,7 @@ export default function PhanBoTangCa() {
     const [caLamId, setCaLamId] = useState(!laAdmin && userCaLamId ? userCaLamId : "");
     const [dayChuyenId, setDayChuyenId] = useState("");
     const [tuKhoaNv, setTuKhoaNv] = useState("");
-    const [tabFilterNv, setTabFilterNv] = useState("TAT_CA"); // "TAT_CA" | "CHUA_GAN" | "GAN_LINE_NAY" | "GAN_LINE_KHAC"
+    const [tabFilterNv, setTabFilterNv] = useState("TAT_CA"); // "TAT_CA" | "CA_NAY" | "CHUA_GAN" | "GAN_LINE_NAY" | "GAN_LINE_KHAC"
 
     // Danh sách dữ liệu
     const [danhSachDayChuyen, setDanhSachDayChuyen] = useState([]);
@@ -38,21 +43,28 @@ export default function PhanBoTangCa() {
             ]);
             if (resDc.success && resDc.data && resDc.data.length > 0) {
                 setDanhSachDayChuyen(resDc.data);
-                setDayChuyenId((prev) => prev || String(resDc.data[0].id));
+                const defaultDc = laLeaderOnly && nguoiDung?.day_chuyen_id ? String(nguoiDung.day_chuyen_id) : String(resDc.data[0].id);
+                setDayChuyenId((prev) => prev || defaultDc);
             }
             if (resCa.success && resCa.data && resCa.data.length > 0) {
                 setDanhSachCaLam(resCa.data);
+<<<<<<< HEAD
                 if (!laAdmin && userCaLamId) {
                     setCaLamId(userCaLamId);
                 } else {
                     const caTangCa = resCa.data.find(c => c.loai_ca === "TANG_CA");
                     setCaLamId((prev) => prev || String(caTangCa ? caTangCa.id : resCa.data[0].id));
                 }
+=======
+                const caTangCa = resCa.data.find(c => c.loai_ca === "TANG_CA");
+                const defaultCa = laLeaderOnly && nguoiDung?.ca_lam_id ? String(nguoiDung.ca_lam_id) : String(caTangCa ? caTangCa.id : resCa.data[0].id);
+                setCaLamId((prev) => prev || defaultCa);
+>>>>>>> upstream/main
             }
         } catch (err) {
             console.error("Lỗi khi tải lookup:", err);
         }
-    }, []);
+    }, [laLeaderOnly, nguoiDung]);
 
     // Load chi tiết Dây chuyền (các công đoạn sản xuất và định biên nhu cầu)
     const taiChiTietDayChuyen = useCallback(async () => {
@@ -192,6 +204,21 @@ export default function PhanBoTangCa() {
 
     // Lọc danh sách nhân sự cột trái theo từ khóa, ca làm và tab
     const filteredNhanSuList = danhSachNhanSuTangCa.filter((nv) => {
+        // Leader CHỈ thấy nhân viên thuộc đúng ca làm (VÀ thuộc dây chuyền nếu có) của mình
+        if (laLeaderOnly) {
+            const targetCa = nguoiDung?.ca_lam_id || caLamId;
+            if (targetCa) {
+                const matchCaGoc = String(nv.ca_lam_goc_id) === String(targetCa);
+                const matchCaDangKy = String(nv.ca_lam_id) === String(targetCa);
+                if (!matchCaGoc && !matchCaDangKy) return false;
+            }
+            if (nguoiDung?.day_chuyen_id) {
+                const matchLineGoc = String(nv.day_chuyen_goc_id) === String(nguoiDung.day_chuyen_id);
+                const matchLinePhanCong = String(nv.phan_cong_day_chuyen_id) === String(nguoiDung.day_chuyen_id);
+                if (!matchLineGoc && !matchLinePhanCong) return false;
+            }
+        }
+
         const matchesKw = !tuKhoaNv.trim() ||
             nv.ho_ten?.toLowerCase().includes(tuKhoaNv.toLowerCase()) ||
             nv.ma_nhan_vien?.toLowerCase().includes(tuKhoaNv.toLowerCase());
@@ -204,12 +231,16 @@ export default function PhanBoTangCa() {
 
         const isCurrentLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) === String(dayChuyenId);
         const isOtherLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) !== String(dayChuyenId);
+        const isSelectedShift = caLamId && (String(nv.ca_lam_id) === String(caLamId) || String(nv.ca_lam_goc_id) === String(caLamId));
 
+        if (tabFilterNv === "CA_NAY") return isSelectedShift;
         if (tabFilterNv === "CHUA_GAN") return !nv.phan_cong_id;
         if (tabFilterNv === "GAN_LINE_NAY") return isCurrentLine;
         if (tabFilterNv === "GAN_LINE_KHAC") return isOtherLine;
         return true;
     });
+
+    const countSameShift = danhSachNhanSuTangCa.filter(nv => String(nv.ca_lam_id) === String(caLamId) || String(nv.ca_lam_goc_id) === String(caLamId)).length;
 
     return (
         <div className="noi-dung-admin">
@@ -284,7 +315,9 @@ export default function PhanBoTangCa() {
                     <label style={{ fontSize: "14px", fontWeight: "bold" }}>⏰ Ca tăng ca:</label>
                     <select
                         value={caLamId}
+                        disabled={laLeaderOnly && Boolean(nguoiDung?.ca_lam_id)}
                         onChange={(e) => setCaLamId(e.target.value)}
+<<<<<<< HEAD
                         disabled={!laAdmin && Boolean(userCaLamId)}
                         style={{
                             padding: "8px 12px",
@@ -294,6 +327,9 @@ export default function PhanBoTangCa() {
                             cursor: (!laAdmin && userCaLamId) ? "not-allowed" : "pointer"
                         }}
                         title={!laAdmin && userCaLamId ? "Ca làm việc cố định của bạn (Không thể đổi)" : "Chọn ca tăng ca"}
+=======
+                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: laLeaderOnly && nguoiDung?.ca_lam_id ? "#f1f5f9" : "#fff" }}
+>>>>>>> upstream/main
                     >
                         {danhSachCaLam.map((cl) => (
                             <option key={cl.id} value={cl.id}>
@@ -310,13 +346,21 @@ export default function PhanBoTangCa() {
                         onChange={(e) => setDayChuyenId(e.target.value)}
                         style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
                     >
-                        {danhSachDayChuyen.map((dc) => (
-                            <option key={dc.id} value={dc.id}>
-                                {dc.ten_day_chuyen}
-                            </option>
-                        ))}
+                        {danhSachDayChuyen
+                            .filter(dc => !laLeaderOnly || !nguoiDung?.day_chuyen_id || String(dc.id) === String(nguoiDung.day_chuyen_id))
+                            .map((dc) => (
+                                <option key={dc.id} value={dc.id}>
+                                    {dc.ten_day_chuyen}
+                                </option>
+                            ))}
                     </select>
                 </div>
+
+                {laLeaderOnly && (
+                    <div style={{ fontSize: "12px", color: "#b45309", fontWeight: "600", marginLeft: "auto" }}>
+                        🔒 Leader chỉ thao tác nhân sự ca/chuyền quản lý
+                    </div>
+                )}
             </div>
 
             {/* Bố cục 2 Cột: Bên trái Danh sách nhân sự tăng ca, Bên phải Sơ đồ công đoạn */}
@@ -326,7 +370,7 @@ export default function PhanBoTangCa() {
                 <div className="the-thong-tin" style={{ margin: 0, padding: "20px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                         <h3 style={{ margin: 0, fontSize: "16px", color: "var(--charcoal)" }}>
-                            👥 Nhân sự Đã duyệt Tăng ca ({danhSachNhanSuTangCa.length})
+                            👥 Nhân sự Đã duyệt Tăng ca ({filteredNhanSuList.length}/{danhSachNhanSuTangCa.length})
                         </h3>
                     </div>
 
@@ -352,7 +396,21 @@ export default function PhanBoTangCa() {
                                 }}
                                 onClick={() => setTabFilterNv("TAT_CA")}
                             >
-                                Tất cả ({totalApproved})
+                                Tất cả ({danhSachNhanSuTangCa.length})
+                            </button>
+                            <button
+                                style={{
+                                    padding: "4px 10px",
+                                    borderRadius: "12px",
+                                    border: "1px solid #0369a1",
+                                    background: tabFilterNv === "CA_NAY" ? "#0284c7" : "#fff",
+                                    color: tabFilterNv === "CA_NAY" ? "#fff" : "#0284c7",
+                                    fontWeight: "bold",
+                                    cursor: "pointer"
+                                }}
+                                onClick={() => setTabFilterNv("CA_NAY")}
+                            >
+                                Thuộc Ca này ({countSameShift})
                             </button>
                             <button
                                 style={{
@@ -430,8 +488,13 @@ export default function PhanBoTangCa() {
                                                 <span style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--text-muted)", marginLeft: "6px" }}>
                                                     ({nv.ma_nhan_vien || "NV"})
                                                 </span>
-                                                <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                                                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
                                                     Chuyền gốc: {nv.ten_day_chuyen_goc || "Chưa gán"}
+                                                    {nv.ten_ca_goc && (
+                                                        <span style={{ color: "#d97706", fontWeight: "600", marginLeft: "6px" }}>
+                                                            | Ca: {nv.ten_ca_goc}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
 
