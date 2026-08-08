@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext.jsx";
 import { useCrud } from "../../../hooks/useCrud.js";
 import { layDanhSachKhuVuc, taoKhuVuc, capNhatKhuVuc, xoaKhuVuc } from "../services/khuVuc.service.js";
 import ModalKhuVuc from "../components/ModalKhuVuc.jsx";
+import LichSuVaThongKeEmbedded from "../../../components/common/LichSuVaThongKeEmbedded.jsx";
 
 export default function QuanLyKhuVuc() {
     const { nguoiDung } = useAuth();
@@ -113,6 +114,13 @@ export default function QuanLyKhuVuc() {
                 khuVuc={dangChon}
                 onClose={dongModal}
                 onSave={xuLyLuu}
+            />
+
+            {/* Embedded Audit History & Statistics for Khu vực */}
+            <LichSuVaThongKeEmbedded
+                loaiDoiTuong="KHU_VUC"
+                tieuDe="Nhật ký & Lịch sử Khu vực"
+                moTa="Ghi nhận mốc thời gian thêm khu vực, leader phụ trách, khách hàng liên kết và lịch sử xóa khu vực"
             />
         </div>
     );

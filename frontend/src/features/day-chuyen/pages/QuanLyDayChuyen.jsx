@@ -3,6 +3,7 @@ import { useAuth } from "../../../context/AuthContext.jsx";
 import { useCrud } from "../../../hooks/useCrud.js";
 import { layDanhSachDayChuyen, taoDayChuyen, capNhatDayChuyen, xoaDayChuyen } from "../services/dayChuyen.service.js";
 import ModalDayChuyen from "../components/ModalDayChuyen.jsx";
+import LichSuVaThongKeEmbedded from "../../../components/common/LichSuVaThongKeEmbedded.jsx";
 
 export default function QuanLyDayChuyen() {
     const { nguoiDung } = useAuth();
@@ -223,6 +224,13 @@ export default function QuanLyDayChuyen() {
                 dayChuyen={dangChon}
                 onClose={dongModal}
                 onSave={xuLyLuu}
+            />
+
+            {/* Embedded Audit History & Statistics for Dây chuyền */}
+            <LichSuVaThongKeEmbedded
+                loaiDoiTuong="DAY_CHUYEN"
+                tieuDe="Nhật ký & Lịch sử Dây chuyền sản xuất"
+                moTa="Lưu vết thời điểm tạo dây chuyền, điều chuyển leader, thay đổi trạng thái và nhật ký xóa dây chuyền"
             />
         </div>
     );

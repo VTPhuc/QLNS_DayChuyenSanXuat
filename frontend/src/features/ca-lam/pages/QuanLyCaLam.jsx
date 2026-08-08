@@ -12,6 +12,7 @@ import {
     xoaLichLam,
     xoayCaLichLam
 } from "../services/caLam.service.js";
+import LichSuVaThongKeEmbedded from "../../../components/common/LichSuVaThongKeEmbedded.jsx";
 
 export default function QuanLyCaLam() {
     const { nguoiDung } = useAuth();

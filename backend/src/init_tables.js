@@ -5,7 +5,23 @@ import pool from "./config/db.js";
  */
 export async function initDatabaseTables() {
     try {
-        // 1. Tạo bảng lich_lam nếu chưa tồn tại
+        // 1. Tạo bảng nhat_ky_he_thong & lich_lam nếu chưa tồn tại
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS nhat_ky_he_thong (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                loai_doi_tuong VARCHAR(50) NOT NULL,
+                hanh_dong VARCHAR(50) NOT NULL,
+                doi_tuong_id INT NULL,
+                ten_doi_tuong VARCHAR(150) NULL,
+                chi_tiet TEXT,
+                nguoi_thuc_hien VARCHAR(100) DEFAULT 'Hệ thống',
+                role_nguoi_thuc_hien VARCHAR(50) DEFAULT 'ADMIN',
+                thoi_gian TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX(loai_doi_tuong),
+                INDEX(thoi_gian)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        `);
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS lich_lam (
                 id INT AUTO_INCREMENT PRIMARY KEY,

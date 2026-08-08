@@ -160,7 +160,7 @@ class AdminController {
 
     static async layLichSuHeThong(req, res, next) {
         try {
-            const data = await AdminService.layLichSuHeThong();
+            const data = await AdminService.layLichSuHeThong(req.query, req.nguoiDung);
             return res.json({
                 success: true,
                 message: "Lấy lịch sử hệ thống thành công",

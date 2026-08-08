@@ -12,6 +12,7 @@ import {
     capNhatDayChuyen,
     capNhatTrangThaiPhanCong
 } from "../services/dayChuyen.service.js";
+import LichSuVaThongKeEmbedded from "../../../components/common/LichSuVaThongKeEmbedded.jsx";
 
 export default function ChiTietDayChuyen() {
     const { id } = useParams();
@@ -1061,6 +1062,13 @@ export default function ChiTietDayChuyen() {
                     </div>
                 </Modal>
             )}
+
+            {/* Embedded Audit History & Statistics for Công đoạn / Nhân sự Dây chuyền */}
+            <LichSuVaThongKeEmbedded
+                loaiDoiTuong="CONG_DOAN"
+                tieuDe="Nhật ký & Lịch sử Phân công, Nghỉ phép & Điều động Công đoạn"
+                moTa="Theo dõi lịch sử phân công nhân viên vào công đoạn, thời gian bắt đầu, chứng chỉ kỹ năng sở hữu, leader quản lý và thông tin nghỉ phép / điều chuyển"
+            />
         </div>
     );
 }

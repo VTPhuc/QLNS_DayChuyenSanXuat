@@ -428,86 +428,102 @@ class AdminService {
         };
     }
 
-    static async layLichSuHeThong() {
-        const [rows] = await pool.query(
-            `SELECT 
-                'PHAN_CONG' AS loai,
-                nk.thoi_gian AS thoi_gian,
-                nv.ho_ten AS ho_ten,
-                nv.ma_nhan_vien AS ma_nhan_vien,
-                nk.ngay AS ngay,
-                nk.hanh_dong AS hanh_dong,
-                dc.ten_day_chuyen AS ten_day_chuyen,
-                cd.ten_cong_doan AS ten_cong_doan,
-                cl.ten_ca AS ten_ca,
-                NULL AS tu_day_chuyen,
-                NULL AS den_day_chuyen,
-                NULL AS cong_doan_cu,
-                NULL AS cong_doan_moi,
-                NULL AS ly_do,
-                'PHAN_CONG_DAILY' AS loai_thay_doi
-             FROM nhat_ky_phan_cong nk
-             JOIN nhan_vien nv ON nk.nhan_vien_id = nv.id
-             LEFT JOIN day_chuyen dc ON nk.day_chuyen_id = dc.id
-             LEFT JOIN cong_doan cd ON nk.cong_doan_id = cd.id
-             LEFT JOIN ca_lam_viec cl ON nk.ca_lam_id = cl.id
-             
-             UNION ALL
-             
-             SELECT 
-                'DIEU_DONG' AS loai,
-                ls.thoi_gian AS thoi_gian,
-                nv.ho_ten AS ho_ten,
-                nv.ma_nhan_vien AS ma_nhan_vien,
-                NULL AS ngay,
-                'DIEU_DONG' AS hanh_dong,
-                NULL AS ten_day_chuyen,
-                NULL AS ten_cong_doan,
-                NULL AS ten_ca,
-                dc_tu.ten_day_chuyen AS tu_day_chuyen,
-                dc_den.ten_day_chuyen AS den_day_chuyen,
-                cd_cu.ten_cong_doan AS cong_doan_cu,
-                cd_moi.ten_cong_doan AS cong_doan_moi,
-                ls.ly_do AS ly_do,
-                ls.loai_thay_doi AS loai_thay_doi
-             FROM lich_su_dieu_dong ls
-             JOIN nhan_vien nv ON ls.nhan_vien_id = nv.id
-             LEFT JOIN day_chuyen dc_tu ON ls.tu_day_chuyen_id = dc_tu.id
-             LEFT JOIN day_chuyen dc_den ON ls.den_day_chuyen_id = dc_den.id
-             LEFT JOIN cong_doan cd_cu ON ls.cong_doan_cu_id = cd_cu.id
-             LEFT JOIN cong_doan cd_moi ON ls.cong_doan_moi_id = cd_moi.id
+    static async layLichSuHeThong(queryObj = {}, nguoiDung = null) {
+        const { loai_doi_tuong, ngay, thang, nam, tu_ngay, den_ngay, q } = queryObj;
+        
+        let sql = `
+            SELECT 
+                nk.id,
+                nk.loai_doi_tuong,
+                nk.hanh_dong,
+                nk.doi_tuong_id,
+                nk.ten_doi_tuong,
+                nk.chi_tiet AS ly_do,
+                nk.nguoi_thuc_hien AS ho_ten,
+                nk.role_nguoi_thuc_hien,
+                nk.thoi_gian
+            FROM nhat_ky_he_thong nk
+            WHERE 1=1
+        `;
+        const params = [];
 
-             UNION ALL
+        if (loai_doi_tuong && loai_doi_tuong !== "ALL") {
+            sql += " AND nk.loai_doi_tuong = ?";
+            params.push(loai_doi_tuong);
+        }
 
-             SELECT 
-                'TANG_CA' AS loai,
-                dk.ngay AS thoi_gian,
-                nv.ho_ten AS ho_ten,
-                nv.ma_nhan_vien AS ma_nhan_vien,
-                dk.ngay AS ngay,
-                dk.trang_thai AS hanh_dong,
-                dc.ten_day_chuyen AS ten_day_chuyen,
-                NULL AS ten_cong_doan,
-                cl.ten_ca AS ten_ca,
-                NULL AS tu_day_chuyen,
-                NULL AS den_day_chuyen,
-                NULL AS cong_doan_cu,
-                NULL AS cong_doan_moi,
-                CONCAT('Đăng ký tăng ca (Trạng thái: ', 
-                       CASE dk.trang_thai 
-                         WHEN 'CHO_DUYET' THEN 'Chờ duyệt' 
-                         WHEN 'DA_DUYET' THEN 'Đã duyệt' 
-                         WHEN 'TU_CHOI' THEN 'Từ chối' 
-                         ELSE dk.trang_thai 
-                       END, ')') AS ly_do,
-                'TANG_CA' AS loai_thay_doi
-             FROM dang_ky_tang_ca dk
-             JOIN nhan_vien nv ON dk.nhan_vien_id = nv.id
-             LEFT JOIN ca_lam_viec cl ON dk.ca_lam_id = cl.id
-             LEFT JOIN day_chuyen dc ON nv.day_chuyen_id = dc.id
-             
-             ORDER BY thoi_gian DESC`
-        );
+        if (ngay) {
+            sql += " AND DATE(nk.thoi_gian) = ?";
+            params.push(ngay);
+        }
+
+        if (thang) {
+            sql += " AND MONTH(nk.thoi_gian) = ?";
+            params.push(Number(thang));
+        }
+
+        if (nam) {
+            sql += " AND YEAR(nk.thoi_gian) = ?";
+            params.push(Number(nam));
+        }
+
+        if (tu_ngay) {
+            sql += " AND DATE(nk.thoi_gian) >= ?";
+            params.push(tu_ngay);
+        }
+
+        if (den_ngay) {
+            sql += " AND DATE(nk.thoi_gian) <= ?";
+            params.push(den_ngay);
+        }
+
+        if (q) {
+            sql += " AND (nk.ten_doi_tuong LIKE ? OR nk.chi_tiet LIKE ? OR nk.nguoi_thuc_hien LIKE ?)";
+            const likeQ = `%${q}%`;
+            params.push(likeQ, likeQ, likeQ);
+        }
+
+        sql += " ORDER BY nk.thoi_gian DESC, nk.id DESC LIMIT 500";
+
+        const [rows] = await pool.query(sql, params);
+
+        // Nếu bảng nhat_ky_he_thong chưa có dữ liệu cũ, truy vấn thêm từ các bảng nhat_ky_phan_cong & lich_su_dieu_dong
+        if (rows.length < 5) {
+            const [legacyRows] = await pool.query(
+                `SELECT 
+                    'CONG_DOAN' AS loai_doi_tuong,
+                    nk.hanh_dong AS hanh_dong,
+                    nk.id AS doi_tuong_id,
+                    dc.ten_day_chuyen AS ten_doi_tuong,
+                    CONCAT('Phân công: ', nv.ho_ten, ' (', nv.ma_nhan_vien, ') tại ', COALESCE(cd.ten_cong_doan, 'Công đoạn'), ' - ', COALESCE(cl.ten_ca, 'Ca làm')) AS ly_do,
+                    nv.ho_ten AS ho_ten,
+                    'Hệ thống' AS role_nguoi_thuc_hien,
+                    nk.thoi_gian AS thoi_gian
+                 FROM nhat_ky_phan_cong nk
+                 JOIN nhan_vien nv ON nk.nhan_vien_id = nv.id
+                 LEFT JOIN day_chuyen dc ON nk.day_chuyen_id = dc.id
+                 LEFT JOIN cong_doan cd ON nk.cong_doan_id = cd.id
+                 LEFT JOIN ca_lam_viec cl ON nk.ca_lam_id = cl.id
+
+                 UNION ALL
+
+                 SELECT 
+                    'NHAN_VIEN' AS loai_doi_tuong,
+                    'DIEU_DONG' AS hanh_dong,
+                    ls.id AS doi_tuong_id,
+                    nv.ho_ten AS ten_doi_tuong,
+                    ls.ly_do AS ly_do,
+                    nv.ho_ten AS ho_ten,
+                    'ADMIN' AS role_nguoi_thuc_hien,
+                    ls.thoi_gian AS thoi_gian
+                 FROM lich_su_dieu_dong ls
+                 JOIN nhan_vien nv ON ls.nhan_vien_id = nv.id
+
+                 ORDER BY thoi_gian DESC LIMIT 100`
+            );
+            return [...rows, ...legacyRows];
+        }
+
         return rows;
     }
 

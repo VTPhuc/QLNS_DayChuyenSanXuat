@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 import ApiError from "../utils/api_error.js";
+import { ghiNhatKyHeThong } from "../utils/nhat_ky.js";
 
 /**
  * Service xử lý nghiệp vụ liên quan đến khu vực
@@ -32,7 +33,7 @@ class KhuVucService {
         return rows[0] || null;
     }
 
-    static async taoKhuVuc({ ten_khu_vuc, khach_hang_id, leader_id }) {
+    static async taoKhuVuc({ ten_khu_vuc, khach_hang_id, leader_id, nguoiDung }) {
         if (!ten_khu_vuc || !khach_hang_id) {
             throw new ApiError(400, "Tên khu vực và Khách hàng không được để trống");
         }
@@ -42,10 +43,29 @@ class KhuVucService {
             [ten_khu_vuc, khach_hang_id, leader_id || null]
         );
 
+        // Fetch meta details for audit log
+        const [khRows] = await pool.query("SELECT ten_khach_hang FROM khach_hang WHERE id = ?", [khach_hang_id]);
+        const tenKhachHang = khRows[0]?.ten_khach_hang || "N/A";
+        let tenLeader = "Chưa phân công";
+        if (leader_id) {
+            const [ldRows] = await pool.query("SELECT ho_ten FROM nhan_vien WHERE id = ?", [leader_id]);
+            if (ldRows[0]) tenLeader = ldRows[0].ho_ten;
+        }
+
+        await ghiNhatKyHeThong({
+            loai_doi_tuong: "KHU_VUC",
+            hanh_dong: "THEM",
+            doi_tuong_id: ketQua.insertId,
+            ten_doi_tuong: ten_khu_vuc,
+            chi_tiet: `Thêm khu vực mới: "${ten_khu_vuc}". Khách hàng: "${tenKhachHang}". Leader phụ trách: "${tenLeader}".`,
+            nguoi_thuc_hien: nguoiDung?.ho_ten || nguoiDung?.ten_dang_nhap || "Admin",
+            role_nguoi_thuc_hien: nguoiDung?.role || "ADMIN"
+        });
+
         return { id: ketQua.insertId, ten_khu_vuc, khach_hang_id, leader_id };
     }
 
-    static async capNhatKhuVuc(id, { ten_khu_vuc, khach_hang_id, leader_id }) {
+    static async capNhatKhuVuc(id, { ten_khu_vuc, khach_hang_id, leader_id, nguoiDung }) {
         if (!ten_khu_vuc || !khach_hang_id) {
             throw new ApiError(400, "Tên khu vực và Khách hàng không được để trống");
         }
@@ -60,10 +80,28 @@ class KhuVucService {
             [ten_khu_vuc, khach_hang_id, leader_id || null, id]
         );
 
+        const [khRows] = await pool.query("SELECT ten_khach_hang FROM khach_hang WHERE id = ?", [khach_hang_id]);
+        const tenKhachHang = khRows[0]?.ten_khach_hang || "N/A";
+        let tenLeader = "Chưa phân công";
+        if (leader_id) {
+            const [ldRows] = await pool.query("SELECT ho_ten FROM nhan_vien WHERE id = ?", [leader_id]);
+            if (ldRows[0]) tenLeader = ldRows[0].ho_ten;
+        }
+
+        await ghiNhatKyHeThong({
+            loai_doi_tuong: "KHU_VUC",
+            hanh_dong: "SUA",
+            doi_tuong_id: id,
+            ten_doi_tuong: ten_khu_vuc,
+            chi_tiet: `Cập nhật khu vực "${ten_khu_vuc}". Khách hàng: "${tenKhachHang}". Leader: "${tenLeader}".`,
+            nguoi_thuc_hien: nguoiDung?.ho_ten || nguoiDung?.ten_dang_nhap || "Admin",
+            role_nguoi_thuc_hien: nguoiDung?.role || "ADMIN"
+        });
+
         return { id, ten_khu_vuc, khach_hang_id, leader_id };
     }
 
-    static async xoaKhuVuc(id) {
+    static async xoaKhuVuc(id, nguoiDung) {
         const khuVuc = await KhuVucService.timKhuVucTheoId(id);
         if (!khuVuc) {
             throw new ApiError(404, "Không tìm thấy khu vực");
@@ -75,6 +113,19 @@ class KhuVucService {
         }
 
         const [ketQua] = await pool.query("DELETE FROM khu_vuc WHERE id = ?", [id]);
+
+        if (ketQua.affectedRows > 0) {
+            await ghiNhatKyHeThong({
+                loai_doi_tuong: "KHU_VUC",
+                hanh_dong: "XOA",
+                doi_tuong_id: id,
+                ten_doi_tuong: khuVuc.ten_khu_vuc,
+                chi_tiet: `Xóa khu vực "${khuVuc.ten_khu_vuc}". Khách hàng cũ: "${khuVuc.ten_khach_hang || 'N/A'}". Leader cũ: "${khuVuc.ten_leader || 'Chưa phân công'}".`,
+                nguoi_thuc_hien: nguoiDung?.ho_ten || nguoiDung?.ten_dang_nhap || "Admin",
+                role_nguoi_thuc_hien: nguoiDung?.role || "ADMIN"
+            });
+        }
+
         return ketQua.affectedRows > 0;
     }
 

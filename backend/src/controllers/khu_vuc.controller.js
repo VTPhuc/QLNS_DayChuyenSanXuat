@@ -47,7 +47,7 @@ class KhuVucController {
     static async taoKhuVuc(req, res, next) {
         try {
             const { ten_khu_vuc, khach_hang_id, leader_id } = req.body;
-            const data = await KhuVucService.taoKhuVuc({ ten_khu_vuc, khach_hang_id, leader_id });
+            const data = await KhuVucService.taoKhuVuc({ ten_khu_vuc, khach_hang_id, leader_id, nguoiDung: req.nguoiDung });
             return res.status(201).json({ success: true, message: "Tạo khu vực thành công", data });
         } catch (err) {
             next(err);
@@ -57,7 +57,7 @@ class KhuVucController {
     static async capNhatKhuVuc(req, res, next) {
         try {
             const { ten_khu_vuc, khach_hang_id, leader_id } = req.body;
-            const data = await KhuVucService.capNhatKhuVuc(req.params.id, { ten_khu_vuc, khach_hang_id, leader_id });
+            const data = await KhuVucService.capNhatKhuVuc(req.params.id, { ten_khu_vuc, khach_hang_id, leader_id, nguoiDung: req.nguoiDung });
             return res.json({ success: true, message: "Cập nhật khu vực thành công", data });
         } catch (err) {
             next(err);
@@ -66,7 +66,7 @@ class KhuVucController {
 
     static async xoaKhuVuc(req, res, next) {
         try {
-            await KhuVucService.xoaKhuVuc(req.params.id);
+            await KhuVucService.xoaKhuVuc(req.params.id, req.nguoiDung);
             return res.json({ success: true, message: "Xóa khu vực thành công", data: null });
         } catch (err) {
             next(err);

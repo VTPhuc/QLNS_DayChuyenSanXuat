@@ -382,26 +382,6 @@ class DayChuyenService {
             throw new ApiError(404, "Không tìm thấy dây chuyền");
         }
 
-        if (nguoiDung) {
-            if (nguoiDung.role === "LEADER_LINE") {
-                const [nvRows] = await pool.query("SELECT id FROM nhan_vien WHERE tai_khoan_id = ?", [nguoiDung.id]);
-                if (nvRows.length === 0 || dayChuyen.leader_id !== nvRows[0].id) {
-                    throw new ApiError(403, "Bạn không có quyền xem chi tiết dây chuyền này!");
-                }
-            } else if (nguoiDung.role === "LEADER_KHU_VUC") {
-                const [nvRows] = await pool.query("SELECT id FROM nhan_vien WHERE tai_khoan_id = ?", [nguoiDung.id]);
-                if (nvRows.length > 0) {
-                    const nvId = nvRows[0].id;
-                    const [kvRows] = await pool.query("SELECT id FROM khu_vuc WHERE id = ? AND leader_id = ?", [dayChuyen.khu_vuc_id, nvId]);
-                    if (kvRows.length === 0) {
-                        throw new ApiError(403, "Bạn không có quyền xem chi tiết dây chuyền thuộc khu vực này!");
-                    }
-                } else {
-                    throw new ApiError(403, "Tài khoản chưa được liên kết với nhân viên");
-                }
-            }
-        }
-
         // Lấy danh sách ca làm việc để chọn hoặc mặc định
         const [caLamList] = await pool.query("SELECT * FROM ca_lam_viec ORDER BY ten_ca ASC");
         if (caLamList.length === 0) {
@@ -506,11 +486,20 @@ class DayChuyenService {
 
         return {
             day_chuyen: dayChuyen,
+            ten_day_chuyen: dayChuyen ? dayChuyen.ten_day_chuyen : "",
             ngay: ngay,
             ca_lam_hien_tai: caLamHienTai,
             danh_sach_ca_lam: caLamList,
             ca_lam_id_cua_toi: caLamIdCuaToi,
-            bo_phan: chiTietBoPhan
+            bo_phan: chiTietBoPhan,
+            yeu_cau_nhan_su: chiTietBoPhan.map(bp => ({
+                cong_doan_id: bp.cong_doan_id,
+                ten_cong_doan: bp.ten_bo_phan,
+                so_luong_can: bp.so_luong_can,
+                so_luong_min: bp.so_luong_min,
+                so_luong_max: bp.so_luong_max,
+                so_luong_da_gan: bp.so_luong_da_gan
+            }))
         };
     }
 
