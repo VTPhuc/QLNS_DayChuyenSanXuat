@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import Modal from "../../../components/ui/Modal.jsx";
+import api from "../../../api.js";
 import {
     layChiTietDayChuyen,
     layUngVienChoBoPhan,
@@ -51,6 +52,8 @@ export default function ChiTietDayChuyen() {
     const [modalCongDoanCheDo, setModalCongDoanCheDo] = useState("THEM"); // "THEM" hoặc "SUA"
     const [modalCongDoanTarget, setModalCongDoanTarget] = useState(null);
     const [modalCongDoanTen, setModalCongDoanTen] = useState("");
+    const [modalCongDoanChungChi, setModalCongDoanChungChi] = useState("");
+    const [danhSachChungChi, setDanhSachChungChi] = useState([]);
     const [modalCongDoanMin, setModalCongDoanMin] = useState(1);
     const [modalCongDoanMax, setModalCongDoanMax] = useState(1);
 
@@ -60,6 +63,20 @@ export default function ChiTietDayChuyen() {
     const laQuyenCauHinh = nguoiDung && ["ADMIN", "LEADER_KHU_VUC", "LEADER_LINE"].includes(nguoiDung.role);
     // ADMIN/MANAGER xem được tất cả các ca; Leader bị khóa về ca của chính mình
     const laAdmin = nguoiDung && ["ADMIN", "MANAGER"].includes(nguoiDung.role);
+
+    useEffect(() => {
+        const fetchChungChi = async () => {
+            try {
+                const res = await api("/chung-chi");
+                if (res.success && res.data) {
+                    setDanhSachChungChi(res.data);
+                }
+            } catch (err) {
+                console.error("Lỗi khi tải danh mục chứng chỉ:", err);
+            }
+        };
+        fetchChungChi();
+    }, []);
 
     useEffect(() => {
         TaiChiTiet();
@@ -268,7 +285,9 @@ export default function ChiTietDayChuyen() {
     function kichHoatThemCongDoan() {
         if (!laQuyenCauHinh) return;
         setModalCongDoanCheDo("THEM");
-        setModalCongDoanTen(`${day_chuyen.ten_day_chuyen} ${bo_phan.length + 1}`);
+        const defaultCc = danhSachChungChi.length > 0 ? danhSachChungChi[0].ten_chung_chi : "";
+        setModalCongDoanChungChi(defaultCc);
+        setModalCongDoanTen(defaultCc ? `${defaultCc} ${bo_phan.length + 1}` : `${day_chuyen.ten_day_chuyen} ${bo_phan.length + 1}`);
         setModalCongDoanMin(1);
         setModalCongDoanMax(1);
         setModalCongDoanOpen(true);
@@ -280,6 +299,8 @@ export default function ChiTietDayChuyen() {
         setModalCongDoanCheDo("SUA");
         setModalCongDoanTarget(bp);
         setModalCongDoanTen(bp.ten_bo_phan);
+        const certName = bp.ten_bo_phan.replace(/\s+\d+$/, "").trim();
+        setModalCongDoanChungChi(certName);
         setModalCongDoanMin(bp.so_luong_min !== null ? bp.so_luong_min : bp.so_luong_can);
         setModalCongDoanMax(bp.so_luong_max !== null ? bp.so_luong_max : bp.so_luong_can);
         setModalCongDoanOpen(true);
@@ -666,7 +687,7 @@ export default function ChiTietDayChuyen() {
                                                     </span>
                                                 )}
                                             </h3>
-                                            <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "var(--text-muted)", display: "flex", gap: "12px", alignItems: "center" }}>
+                                            <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "var(--text-muted)", display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
                                                 <span>Yêu cầu định biên: <strong>{bp.so_luong_min !== null && bp.so_luong_max !== null ? `${bp.so_luong_min}-${bp.so_luong_max}` : bp.so_luong_can}</strong> người | Hiện tại: <strong>{bp.so_luong_da_gan}</strong> người</span>
                                                 {laQuyenCauHinh && (
                                                     <span style={{ display: "flex", gap: "8px" }}>
@@ -962,6 +983,40 @@ export default function ChiTietDayChuyen() {
                         </>
                     }
                 >
+                    <div className="nhom-o-nhap" style={{ marginBottom: "16px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            🎓 Chứng chỉ / Kỹ năng bắt buộc
+                        </label>
+                        <select
+                            value={modalCongDoanChungChi}
+                            onChange={(e) => {
+                                const newCert = e.target.value;
+                                setModalCongDoanChungChi(newCert);
+                                if (modalCongDoanCheDo === "THEM" && newCert) {
+                                    setModalCongDoanTen(`${newCert} ${bo_phan.length + 1}`);
+                                }
+                            }}
+                            style={{
+                                padding: "8px 12px",
+                                border: "1px solid #cbd5e0",
+                                borderRadius: "var(--radius)",
+                                fontSize: "14px",
+                                background: "#fff",
+                                width: "100%"
+                            }}
+                        >
+                            <option value="">-- Chọn chứng chỉ kỹ năng --</option>
+                            {danhSachChungChi.map(cc => (
+                                <option key={cc.id} value={cc.ten_chung_chi}>
+                                    🎓 {cc.ten_chung_chi}
+                                </option>
+                            ))}
+                        </select>
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
+                            💡 Nhân sự khi phân công hoặc tự động gán vào vị trí này sẽ yêu cầu / ưu tiên có chứng chỉ kỹ năng tương ứng.
+                        </span>
+                    </div>
+
                     <div className="nhom-o-nhap">
                         <label>Tên công đoạn</label>
                         <input

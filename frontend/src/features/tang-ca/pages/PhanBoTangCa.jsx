@@ -4,15 +4,10 @@ import api from "../../../api.js";
 
 export default function PhanBoTangCa() {
     const { nguoiDung } = useAuth();
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const laAdmin = nguoiDung && nguoiDung.role === "ADMIN";
-=======
+
     const laAdmin = nguoiDung && (nguoiDung.role === "ADMIN" || nguoiDung.role === "MANAGER");
-=======
->>>>>>> 09a1d3233510164eca448250095ffdfc7be14d2e
+
     const laLeaderOnly = nguoiDung && (nguoiDung.role === "LEADER_LINE" || nguoiDung.role === "LEADER_KHU_VUC");
->>>>>>> upstream/main
     const laLeader = nguoiDung && ["ADMIN", "LEADER_KHU_VUC", "LEADER_LINE", "MANAGER"].includes(nguoiDung.role);
     const userCaLamId = nguoiDung?.ca_lam_id ? String(nguoiDung.ca_lam_id) : "";
 
@@ -65,18 +60,9 @@ export default function PhanBoTangCa() {
             }
             if (resCa.success && resCa.data && resCa.data.length > 0) {
                 setDanhSachCaLam(resCa.data);
-<<<<<<< HEAD
-                if (!laAdmin && userCaLamId) {
-                    setCaLamId(userCaLamId);
-                } else {
-                    const caTangCa = resCa.data.find(c => c.loai_ca === "TANG_CA");
-                    setCaLamId((prev) => prev || String(caTangCa ? caTangCa.id : resCa.data[0].id));
-                }
-=======
                 const caTangCa = resCa.data.find(c => c.loai_ca === "TANG_CA");
-                const defaultCa = laLeaderOnly && nguoiDung?.ca_lam_id ? String(nguoiDung.ca_lam_id) : String(caTangCa ? caTangCa.id : resCa.data[0].id);
+                const defaultCa = (laLeaderOnly && userCaLamId) ? userCaLamId : String(caTangCa ? caTangCa.id : resCa.data[0].id);
                 setCaLamId((prev) => prev || defaultCa);
->>>>>>> upstream/main
             }
         } catch (err) {
             console.error("Lỗi khi tải lookup:", err);
@@ -355,172 +341,6 @@ export default function PhanBoTangCa() {
             {thongBao && <div className="thong-bao-thanh-cong">✅ {thongBao}</div>}
             {loi && <div className="thong-bao-loi">⚠️ {loi}</div>}
 
-<<<<<<< HEAD
-            {/* Thanh bộ lọc Ngày, Ca tăng ca, Dây chuyền */}
-            <div
-                style={{
-                    display: "flex",
-                    gap: "16px",
-                    marginBottom: "20px",
-                    flexWrap: "wrap",
-                    background: "#fff",
-                    padding: "16px 20px",
-                    borderRadius: "var(--radius)",
-                    border: "1px solid #e2e5ea",
-                    alignItems: "center"
-                }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <label style={{ fontSize: "14px", fontWeight: "bold" }}>📅 Ngày tăng ca:</label>
-                    <input
-                        type="date"
-                        value={ngay}
-                        onChange={(e) => setNgay(e.target.value)}
-                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                    />
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <label style={{ fontSize: "14px", fontWeight: "bold" }}>⏰ Ca tăng ca:</label>
-                    <select
-                        value={caLamId}
-                        disabled={laLeaderOnly && Boolean(nguoiDung?.ca_lam_id)}
-                        onChange={(e) => setCaLamId(e.target.value)}
-<<<<<<< HEAD
-                        disabled={!laAdmin && Boolean(userCaLamId)}
-                        style={{
-                            padding: "8px 12px",
-                            border: "1px solid #cbd5e1",
-                            borderRadius: "var(--radius)",
-                            background: (!laAdmin && userCaLamId) ? "#f1f5f9" : "#fff",
-                            cursor: (!laAdmin && userCaLamId) ? "not-allowed" : "pointer"
-                        }}
-                        title={!laAdmin && userCaLamId ? "Ca làm việc cố định của bạn (Không thể đổi)" : "Chọn ca tăng ca"}
-=======
-                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: laLeaderOnly && nguoiDung?.ca_lam_id ? "#f1f5f9" : "#fff" }}
->>>>>>> upstream/main
-                    >
-                        {danhSachCaLam.map((cl) => (
-                            <option key={cl.id} value={cl.id}>
-                                {cl.ten_ca} ({cl.gio_bat_dau ? cl.gio_bat_dau.substring(0, 5) : ""} - {cl.gio_ket_thuc ? cl.gio_ket_thuc.substring(0, 5) : ""}) {cl.loai_ca === "TANG_CA" ? "⚡[OT]" : ""}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <label style={{ fontSize: "14px", fontWeight: "bold" }}>⛓️ Dây chuyền mục tiêu:</label>
-                    <select
-                        value={dayChuyenId}
-                        onChange={(e) => setDayChuyenId(e.target.value)}
-                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
-                    >
-                        {danhSachDayChuyen
-                            .filter(dc => !laLeaderOnly || !nguoiDung?.day_chuyen_id || String(dc.id) === String(nguoiDung.day_chuyen_id))
-                            .map((dc) => (
-                                <option key={dc.id} value={dc.id}>
-                                    {dc.ten_day_chuyen}
-                                </option>
-                            ))}
-                    </select>
-                </div>
-
-                {laLeaderOnly && (
-                    <div style={{ fontSize: "12px", color: "#b45309", fontWeight: "600", marginLeft: "auto" }}>
-                        🔒 Leader chỉ thao tác nhân sự ca/chuyền quản lý
-                    </div>
-                )}
-            </div>
-
-            {/* Bố cục 2 Cột: Bên trái Danh sách nhân sự tăng ca, Bên phải Sơ đồ công đoạn */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "24px" }}>
-
-                {/* CỘT TRÁI: NHÂN SỰ ĐÃ DUYỆT TĂNG CA */}
-                <div className="the-thong-tin" style={{ margin: 0, padding: "20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                        <h3 style={{ margin: 0, fontSize: "16px", color: "var(--charcoal)" }}>
-                            👥 Nhân sự Đã duyệt Tăng ca ({filteredNhanSuList.length}/{danhSachNhanSuTangCa.length})
-                        </h3>
-                    </div>
-
-                    {/* Ô tìm kiếm & Tabs lọc nhanh */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "14px" }}>
-                        <input
-                            type="text"
-                            placeholder="🔍 Tìm theo mã NV hoặc họ tên..."
-                            value={tuKhoaNv}
-                            onChange={(e) => setTuKhoaNv(e.target.value)}
-                            style={{ padding: "8px 12px", fontSize: "13px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                        />
-
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", fontSize: "12px" }}>
-                            <button
-                                style={{
-                                    padding: "4px 10px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #cbd5e1",
-                                    background: tabFilterNv === "TAT_CA" ? "var(--charcoal)" : "#fff",
-                                    color: tabFilterNv === "TAT_CA" ? "#fff" : "var(--charcoal)",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => setTabFilterNv("TAT_CA")}
-                            >
-                                Tất cả ({danhSachNhanSuTangCa.length})
-                            </button>
-                            <button
-                                style={{
-                                    padding: "4px 10px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #0369a1",
-                                    background: tabFilterNv === "CA_NAY" ? "#0284c7" : "#fff",
-                                    color: tabFilterNv === "CA_NAY" ? "#fff" : "#0284c7",
-                                    fontWeight: "bold",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => setTabFilterNv("CA_NAY")}
-                            >
-                                Thuộc Ca này ({countSameShift})
-                            </button>
-                            <button
-                                style={{
-                                    padding: "4px 10px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #cbd5e1",
-                                    background: tabFilterNv === "CHUA_GAN" ? "#64748b" : "#fff",
-                                    color: tabFilterNv === "CHUA_GAN" ? "#fff" : "#64748b",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => setTabFilterNv("CHUA_GAN")}
-                            >
-                                Chưa gán ({unassignedStaff.length})
-                            </button>
-                            <button
-                                style={{
-                                    padding: "4px 10px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #86efac",
-                                    background: tabFilterNv === "GAN_LINE_NAY" ? "#15803d" : "#fff",
-                                    color: tabFilterNv === "GAN_LINE_NAY" ? "#fff" : "#15803d",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => setTabFilterNv("GAN_LINE_NAY")}
-                            >
-                                Line này ({assignedCurrentLine.length})
-                            </button>
-                            <button
-                                style={{
-                                    padding: "4px 10px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #fde68a",
-                                    background: tabFilterNv === "GAN_LINE_KHAC" ? "#b45309" : "#fff",
-                                    color: tabFilterNv === "GAN_LINE_KHAC" ? "#fff" : "#b45309",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => setTabFilterNv("GAN_LINE_KHAC")}
-                            >
-                                Line khác ({assignedOtherLine.length})
-                            </button>
-=======
             {/* TAB 1: SƠ ĐỒ PHÂN BỔ NHÂN SỰ TĂNG CA */}
             {tabChinh === "PHAN_BO" && (
                 <>
@@ -541,545 +361,544 @@ export default function PhanBoTangCa() {
                         <div className="the-thong-tin" style={{ marginBottom: 0, padding: "14px 18px" }}>
                             <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>CHƯA PHÂN BỔ</span>
                             <h3 style={{ fontSize: "24px", margin: "4px 0 0", color: "#64748b" }}>{unassignedStaff.length}</h3>
->>>>>>> 09a1d3233510164eca448250095ffdfc7be14d2e
                         </div>
                     </div>
 
                     {/* Thanh bộ lọc Ngày, Ca tăng ca, Dây chuyền */}
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "16px",
-                            marginBottom: "20px",
-                            flexWrap: "wrap",
-                            background: "#fff",
-                            padding: "16px 20px",
-                            borderRadius: "var(--radius)",
-                            border: "1px solid #e2e5ea",
-                            alignItems: "center"
-                        }}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <label style={{ fontSize: "14px", fontWeight: "bold" }}>📅 Ngày tăng ca:</label>
-                            <input
-                                type="date"
-                                value={ngay}
-                                onChange={(e) => setNgay(e.target.value)}
-                                style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                            />
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <label style={{ fontSize: "14px", fontWeight: "bold" }}>⏰ Ca tăng ca:</label>
-                            <select
-                                value={caLamId}
-                                disabled={laLeaderOnly && Boolean(nguoiDung?.ca_lam_id)}
-                                onChange={(e) => setCaLamId(e.target.value)}
-                                style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: laLeaderOnly && nguoiDung?.ca_lam_id ? "#f1f5f9" : "#fff" }}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "16px",
+                                    marginBottom: "20px",
+                                    flexWrap: "wrap",
+                                    background: "#fff",
+                                    padding: "16px 20px",
+                                    borderRadius: "var(--radius)",
+                                    border: "1px solid #e2e5ea",
+                                    alignItems: "center"
+                                }}
                             >
-                                {danhSachCaLam.map((cl) => (
-                                    <option key={cl.id} value={cl.id}>
-                                        {cl.ten_ca} ({cl.gio_bat_dau ? cl.gio_bat_dau.substring(0, 5) : ""} - {cl.gio_ket_thuc ? cl.gio_ket_thuc.substring(0, 5) : ""}) {cl.loai_ca === "TANG_CA" ? "⚡[OT]" : ""}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <label style={{ fontSize: "14px", fontWeight: "bold" }}>⛓️ Dây chuyền mục tiêu:</label>
-                            <select
-                                value={dayChuyenId}
-                                onChange={(e) => setDayChuyenId(e.target.value)}
-                                style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
-                            >
-                                {danhSachDayChuyen
-                                    .filter(dc => !laLeaderOnly || !nguoiDung?.day_chuyen_id || String(dc.id) === String(nguoiDung.day_chuyen_id))
-                                    .map((dc) => (
-                                        <option key={dc.id} value={dc.id}>
-                                            {dc.ten_day_chuyen}
-                                        </option>
-                                    ))}
-                            </select>
-                        </div>
-
-                        {laLeaderOnly && (
-                            <div style={{ fontSize: "12px", color: "#b45309", fontWeight: "600", marginLeft: "auto" }}>
-                                🔒 Leader chỉ thao tác nhân sự ca/chuyền quản lý
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Bố cục 2 Cột: Bên trái Danh sách nhân sự tăng ca, Bên phải Sơ đồ công đoạn */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "24px" }}>
-
-                        {/* CỘT TRÁI: NHÂN SỰ ĐÃ DUYỆT TĂNG CA */}
-                        <div className="the-thong-tin" style={{ margin: 0, padding: "20px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                                <h3 style={{ margin: 0, fontSize: "16px", color: "var(--charcoal)" }}>
-                                    👥 Nhân sự Đã duyệt Tăng ca ({filteredNhanSuList.length}/{danhSachNhanSuTangCa.length})
-                                </h3>
-                            </div>
-
-                            {/* Ô tìm kiếm & Tabs lọc nhanh */}
-                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "14px" }}>
-                                <input
-                                    type="text"
-                                    placeholder="🔍 Tìm theo mã NV hoặc họ tên..."
-                                    value={tuKhoaNv}
-                                    onChange={(e) => setTuKhoaNv(e.target.value)}
-                                    style={{ padding: "8px 12px", fontSize: "13px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                                />
-
-                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", fontSize: "12px" }}>
-                                    <button
-                                        style={{
-                                            padding: "4px 10px",
-                                            borderRadius: "12px",
-                                            border: "1px solid #cbd5e1",
-                                            background: tabFilterNv === "TAT_CA" ? "var(--charcoal)" : "#fff",
-                                            color: tabFilterNv === "TAT_CA" ? "#fff" : "var(--charcoal)",
-                                            cursor: "pointer"
-                                        }}
-                                        onClick={() => setTabFilterNv("TAT_CA")}
-                                    >
-                                        Tất cả ({danhSachNhanSuTangCa.length})
-                                    </button>
-                                    <button
-                                        style={{
-                                            padding: "4px 10px",
-                                            borderRadius: "12px",
-                                            border: "1px solid #0369a1",
-                                            background: tabFilterNv === "CA_NAY" ? "#0284c7" : "#fff",
-                                            color: tabFilterNv === "CA_NAY" ? "#fff" : "#0284c7",
-                                            fontWeight: "bold",
-                                            cursor: "pointer"
-                                        }}
-                                        onClick={() => setTabFilterNv("CA_NAY")}
-                                    >
-                                        Thuộc Ca này ({countSameShift})
-                                    </button>
-                                    <button
-                                        style={{
-                                            padding: "4px 10px",
-                                            borderRadius: "12px",
-                                            border: "1px solid #cbd5e1",
-                                            background: tabFilterNv === "CHUA_GAN" ? "#64748b" : "#fff",
-                                            color: tabFilterNv === "CHUA_GAN" ? "#fff" : "#64748b",
-                                            cursor: "pointer"
-                                        }}
-                                        onClick={() => setTabFilterNv("CHUA_GAN")}
-                                    >
-                                        Chưa gán ({unassignedStaff.length})
-                                    </button>
-                                    <button
-                                        style={{
-                                            padding: "4px 10px",
-                                            borderRadius: "12px",
-                                            border: "1px solid #86efac",
-                                            background: tabFilterNv === "GAN_LINE_NAY" ? "#15803d" : "#fff",
-                                            color: tabFilterNv === "GAN_LINE_NAY" ? "#fff" : "#15803d",
-                                            cursor: "pointer"
-                                        }}
-                                        onClick={() => setTabFilterNv("GAN_LINE_NAY")}
-                                    >
-                                        Line này ({assignedCurrentLine.length})
-                                    </button>
-                                    <button
-                                        style={{
-                                            padding: "4px 10px",
-                                            borderRadius: "12px",
-                                            border: "1px solid #fde68a",
-                                            background: tabFilterNv === "GAN_LINE_KHAC" ? "#b45309" : "#fff",
-                                            color: tabFilterNv === "GAN_LINE_KHAC" ? "#fff" : "#b45309",
-                                            cursor: "pointer"
-                                        }}
-                                        onClick={() => setTabFilterNv("GAN_LINE_KHAC")}
-                                    >
-                                        Line khác ({assignedOtherLine.length})
-                                    </button>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <label style={{ fontSize: "14px", fontWeight: "bold" }}>📅 Ngày tăng ca:</label>
+                                    <input
+                                        type="date"
+                                        value={ngay}
+                                        onChange={(e) => setNgay(e.target.value)}
+                                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
+                                    />
                                 </div>
-                            </div>
 
-                            {/* Danh sách thẻ Nhân sự tăng ca */}
-                            <div style={{ maxHeight: "580px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", paddingRight: "4px" }}>
-                                {dangTai ? (
-                                    <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>Đang tải danh sách nhân sự tăng ca...</div>
-                                ) : filteredNhanSuList.length === 0 ? (
-                                    <div style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontSize: "13px" }}>
-                                        Không tìm thấy nhân sự tăng ca nào theo bộ lọc
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <label style={{ fontSize: "14px", fontWeight: "bold" }}>⏰ Ca tăng ca:</label>
+                                    <select
+                                        value={caLamId}
+                                        disabled={laLeaderOnly && Boolean(nguoiDung?.ca_lam_id)}
+                                        onChange={(e) => setCaLamId(e.target.value)}
+                                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: laLeaderOnly && nguoiDung?.ca_lam_id ? "#f1f5f9" : "#fff" }}
+                                    >
+                                        {danhSachCaLam.map((cl) => (
+                                            <option key={cl.id} value={cl.id}>
+                                                {cl.ten_ca} ({cl.gio_bat_dau ? cl.gio_bat_dau.substring(0, 5) : ""} - {cl.gio_ket_thuc ? cl.gio_ket_thuc.substring(0, 5) : ""}) {cl.loai_ca === "TANG_CA" ? "⚡[OT]" : ""}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <label style={{ fontSize: "14px", fontWeight: "bold" }}>⛓️ Dây chuyền mục tiêu:</label>
+                                    <select
+                                        value={dayChuyenId}
+                                        onChange={(e) => setDayChuyenId(e.target.value)}
+                                        style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
+                                    >
+                                        {danhSachDayChuyen
+                                            .filter(dc => !laLeaderOnly || !nguoiDung?.day_chuyen_id || String(dc.id) === String(nguoiDung.day_chuyen_id))
+                                            .map((dc) => (
+                                                <option key={dc.id} value={dc.id}>
+                                                    {dc.ten_day_chuyen}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
+
+                                {laLeaderOnly && (
+                                    <div style={{ fontSize: "12px", color: "#b45309", fontWeight: "600", marginLeft: "auto" }}>
+                                        🔒 Leader chỉ thao tác nhân sự ca/chuyền quản lý
                                     </div>
-                                ) : (
-                                    filteredNhanSuList.map((nv) => {
-                                        const isAssignedCurrentLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) === String(dayChuyenId);
-                                        const isAssignedOtherLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) !== String(dayChuyenId);
-                                        const isSameLine = Number(nv.day_chuyen_goc_id) === Number(dayChuyenId);
-
-                                        return (
-                                            <div
-                                                key={nv.dang_ky_id}
-                                                style={{
-                                                    padding: "12px 14px",
-                                                    border: `1px solid ${isAssignedCurrentLine ? "#86efac" : isAssignedOtherLine ? "#fde68a" : "#cbd5e1"}`,
-                                                    borderRadius: "var(--radius)",
-                                                    background: isAssignedCurrentLine ? "#f0fdf4" : isAssignedOtherLine ? "#fffbeb" : "#fff",
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    gap: "6px"
-                                                }}
-                                            >
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                                    <div>
-                                                        <strong style={{ fontSize: "14px", color: "var(--charcoal)" }}>{nv.ho_ten}</strong>
-                                                        <span style={{ fontSize: "12px", color: "var(--text-muted)", marginLeft: "6px", fontFamily: "var(--font-mono)" }}>
-                                                            ({nv.ma_nhan_vien})
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Badge trạng thái gán */}
-                                                    {isAssignedCurrentLine ? (
-                                                        <span style={{ fontSize: "11px", background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: "10px", fontWeight: "bold" }}>
-                                                            ✓ Đã vào: {nv.ten_cong_doan}
-                                                        </span>
-                                                    ) : isAssignedOtherLine ? (
-                                                        <span style={{ fontSize: "11px", background: "#fef3c7", color: "#b45309", padding: "2px 8px", borderRadius: "10px", fontWeight: "bold" }}>
-                                                            🔄 Đã gán ở {nv.ten_day_chuyen_phan_cong}
-                                                        </span>
-                                                    ) : (
-                                                        <span style={{ fontSize: "11px", background: "#f1f5f9", color: "#64748b", padding: "2px 8px", borderRadius: "10px" }}>
-                                                            ⏳ Chưa gán
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div style={{ fontSize: "12px", color: "#475569", display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                                                    <span>
-                                                        Line gốc: <strong style={{ color: isSameLine ? "#15803d" : "#475569" }}>{nv.ten_day_chuyen_goc || "Chưa gán"}</strong>
-                                                    </span>
-                                                    <span>Ca đăng ký OT: <strong>{nv.ten_ca}</strong></span>
-                                                </div>
-
-                                                {/* Danh sách Chứng chỉ / Kỹ năng */}
-                                                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "2px" }}>
-                                                    {nv.ky_nang_list && nv.ky_nang_list.length > 0 ? (
-                                                        nv.ky_nang_list.map((kn, idx) => (
-                                                            <span
-                                                                key={idx}
-                                                                style={{
-                                                                    fontSize: "11px",
-                                                                    background: "#e0f2fe",
-                                                                    color: "#0369a1",
-                                                                    padding: "1px 6px",
-                                                                    borderRadius: "4px",
-                                                                    fontWeight: "500"
-                                                                }}
-                                                            >
-                                                                🎓 {kn.ten_chung_chi} (Cấp {kn.cap_do})
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <span style={{ fontSize: "11px", color: "#94a3b8" }}>Lao động phổ thông</span>
-                                                    )}
-                                                </div>
-
-                                                {/* Chọn nhanh công đoạn để gán nếu chưa gán hoặc gỡ gán */}
-                                                {laLeader && chiTietDayChuyen && chiTietDayChuyen.yeu_cau_nhan_su && (
-                                                    <div style={{ marginTop: "6px", display: "flex", gap: "8px", alignItems: "center" }}>
-                                                        <select
-                                                            value={isAssignedCurrentLine ? nv.cong_doan_id : ""}
-                                                            onChange={(e) => xuLyPhanBo(nv.nhan_vien_id, e.target.value)}
-                                                            style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "4px", border: "1px solid #cbd5e1", flex: 1 }}
-                                                        >
-                                                            <option value="">-- Xếp vào Công đoạn của Line này --</option>
-                                                            {chiTietDayChuyen.yeu_cau_nhan_su.map((yc) => (
-                                                                <option key={yc.cong_doan_id} value={yc.cong_doan_id}>
-                                                                    📌 {yc.ten_cong_doan} (Nhu cầu: {yc.so_luong_can} người)
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                        {nv.phan_cong_id && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => xuLyGoPhanBo(nv.nhan_vien_id)}
-                                                                style={{ fontSize: "11px", color: "#dc2626", background: "#fef2f2", border: "1px solid #fca5a5", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" }}
-                                                                title="Gỡ phân công"
-                                                            >
-                                                                Gỡ gán
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })
                                 )}
                             </div>
-                        </div>
 
-                        {/* CỘT PHẢI: SƠ ĐỒ ĐỊNH BIÊN CÔNG ĐOẠN DÂY CHUYỀN */}
-                        <div className="the-thong-tin" style={{ margin: 0, padding: "20px" }}>
-                            <h3 style={{ margin: "0 0 16px", fontSize: "16px", color: "var(--charcoal)" }}>
-                                🏭 Công đoạn Sản xuất Line: {chiTietDayChuyen?.ten_day_chuyen || "Đang tải..."}
-                            </h3>
+                            {/* Bố cục 2 Cột: Bên trái Danh sách nhân sự tăng ca, Bên phải Sơ đồ công đoạn */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "24px" }}>
 
-                            {!chiTietDayChuyen || !chiTietDayChuyen.yeu_cau_nhan_su || chiTietDayChuyen.yeu_cau_nhan_su.length === 0 ? (
-                                <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
-                                    Dây chuyền này chưa được cấu hình định biên công đoạn sản xuất
-                                </div>
-                            ) : (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                                    {chiTietDayChuyen.yeu_cau_nhan_su.map((cd) => {
-                                        // Tìm danh sách nhân viên đã được gán vào công đoạn này trong ca/ngày hiện tại
-                                        const assignedInProcess = danhSachNhanSuTangCa.filter(
-                                            (x) => x.phan_cong_id &&
-                                                   String(x.phan_cong_day_chuyen_id) === String(dayChuyenId) &&
-                                                   Number(x.cong_doan_id) === Number(cd.cong_doan_id)
-                                        );
+                                {/* CỘT TRÁI: NHÂN SỰ ĐÃ DUYỆT TĂNG CA */}
+                                <div className="the-thong-tin" style={{ margin: 0, padding: "20px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                                        <h3 style={{ margin: 0, fontSize: "16px", color: "var(--charcoal)" }}>
+                                            👥 Nhân sự Đã duyệt Tăng ca ({filteredNhanSuList.length}/{danhSachNhanSuTangCa.length})
+                                        </h3>
+                                    </div>
 
-                                        const neededCount = cd.so_luong_can;
-                                        const currentCount = assignedInProcess.length;
-                                        const isFilled = currentCount >= neededCount;
+                                    {/* Ô tìm kiếm & Tabs lọc nhanh */}
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "14px" }}>
+                                        <input
+                                            type="text"
+                                            placeholder="🔍 Tìm theo mã NV hoặc họ tên..."
+                                            value={tuKhoaNv}
+                                            onChange={(e) => setTuKhoaNv(e.target.value)}
+                                            style={{ padding: "8px 12px", fontSize: "13px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
+                                        />
 
-                                        const tenChungChiYeuCau = cd.ten_cong_doan.replace(/\s+\d+$/, "").trim();
-
-                                        return (
-                                            <div
-                                                key={cd.cong_doan_id}
+                                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", fontSize: "12px" }}>
+                                            <button
                                                 style={{
-                                                    border: `1px solid ${isFilled ? "#86efac" : "#fde68a"}`,
-                                                    borderRadius: "var(--radius)",
-                                                    background: "#fff",
-                                                    padding: "14px",
-                                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    border: "1px solid #cbd5e1",
+                                                    background: tabFilterNv === "TAT_CA" ? "var(--charcoal)" : "#fff",
+                                                    color: tabFilterNv === "TAT_CA" ? "#fff" : "var(--charcoal)",
+                                                    cursor: "pointer"
                                                 }}
+                                                onClick={() => setTabFilterNv("TAT_CA")}
                                             >
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                                                    <div>
-                                                        <strong style={{ fontSize: "15px", color: "var(--charcoal)" }}>📌 {cd.ten_cong_doan}</strong>
-                                                        <span style={{ fontSize: "12px", color: "#64748b", display: "block", marginTop: "2px" }}>
-                                                            Yêu cầu CC kỹ năng: <span style={{ color: "#0284c7", fontWeight: "600" }}>{tenChungChiYeuCau}</span>
-                                                        </span>
-                                                    </div>
-                                                    <div style={{ textAlign: "right" }}>
-                                                        <span
-                                                            style={{
-                                                                fontSize: "13px",
-                                                                fontWeight: "bold",
-                                                                color: isFilled ? "#15803d" : "#b45309",
-                                                                background: isFilled ? "#dcfce7" : "#fef3c7",
-                                                                padding: "4px 10px",
-                                                                borderRadius: "12px"
-                                                            }}
-                                                        >
-                                                            {currentCount} / {neededCount} người
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                Tất cả ({danhSachNhanSuTangCa.length})
+                                            </button>
+                                            <button
+                                                style={{
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    border: "1px solid #0369a1",
+                                                    background: tabFilterNv === "CA_NAY" ? "#0284c7" : "#fff",
+                                                    color: tabFilterNv === "CA_NAY" ? "#fff" : "#0284c7",
+                                                    fontWeight: "bold",
+                                                    cursor: "pointer"
+                                                }}
+                                                onClick={() => setTabFilterNv("CA_NAY")}
+                                            >
+                                                Thuộc Ca này ({countSameShift})
+                                            </button>
+                                            <button
+                                                style={{
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    border: "1px solid #cbd5e1",
+                                                    background: tabFilterNv === "CHUA_GAN" ? "#64748b" : "#fff",
+                                                    color: tabFilterNv === "CHUA_GAN" ? "#fff" : "#64748b",
+                                                    cursor: "pointer"
+                                                }}
+                                                onClick={() => setTabFilterNv("CHUA_GAN")}
+                                            >
+                                                Chưa gán ({unassignedStaff.length})
+                                            </button>
+                                            <button
+                                                style={{
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    border: "1px solid #86efac",
+                                                    background: tabFilterNv === "GAN_LINE_NAY" ? "#15803d" : "#fff",
+                                                    color: tabFilterNv === "GAN_LINE_NAY" ? "#fff" : "#15803d",
+                                                    cursor: "pointer"
+                                                }}
+                                                onClick={() => setTabFilterNv("GAN_LINE_NAY")}
+                                            >
+                                                Line này ({assignedCurrentLine.length})
+                                            </button>
+                                            <button
+                                                style={{
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    border: "1px solid #fde68a",
+                                                    background: tabFilterNv === "GAN_LINE_KHAC" ? "#b45309" : "#fff",
+                                                    color: tabFilterNv === "GAN_LINE_KHAC" ? "#fff" : "#b45309",
+                                                    cursor: "pointer"
+                                                }}
+                                                onClick={() => setTabFilterNv("GAN_LINE_KHAC")}
+                                            >
+                                                Line khác ({assignedOtherLine.length})
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                                {/* Danh sách nhân viên đang xếp vào công đoạn này */}
-                                                <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                                                    {assignedInProcess.length === 0 ? (
-                                                        <div style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic", padding: "6px", background: "#f8fafc", borderRadius: "4px" }}>
-                                                            Chưa có nhân sự nào được phân bổ vào công đoạn này
+                                    {/* Danh sách thẻ Nhân sự tăng ca */}
+                                    <div style={{ maxHeight: "580px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", paddingRight: "4px" }}>
+                                        {dangTai ? (
+                                            <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>Đang tải danh sách nhân sự tăng ca...</div>
+                                        ) : filteredNhanSuList.length === 0 ? (
+                                            <div style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontSize: "13px" }}>
+                                                Không tìm thấy nhân sự tăng ca nào theo bộ lọc
+                                            </div>
+                                        ) : (
+                                            filteredNhanSuList.map((nv) => {
+                                                const isAssignedCurrentLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) === String(dayChuyenId);
+                                                const isAssignedOtherLine = nv.phan_cong_id && String(nv.phan_cong_day_chuyen_id) !== String(dayChuyenId);
+                                                const isSameLine = Number(nv.day_chuyen_goc_id) === Number(dayChuyenId);
+
+                                                return (
+                                                    <div
+                                                        key={nv.dang_ky_id}
+                                                        style={{
+                                                            padding: "12px 14px",
+                                                            border: `1px solid ${isAssignedCurrentLine ? "#86efac" : isAssignedOtherLine ? "#fde68a" : "#cbd5e1"}`,
+                                                            borderRadius: "var(--radius)",
+                                                            background: isAssignedCurrentLine ? "#f0fdf4" : isAssignedOtherLine ? "#fffbeb" : "#fff",
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            gap: "6px"
+                                                        }}
+                                                    >
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                            <div>
+                                                                <strong style={{ fontSize: "14px", color: "var(--charcoal)" }}>{nv.ho_ten}</strong>
+                                                                <span style={{ fontSize: "12px", color: "var(--text-muted)", marginLeft: "6px", fontFamily: "var(--font-mono)" }}>
+                                                                    ({nv.ma_nhan_vien})
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Badge trạng thái gán */}
+                                                            {isAssignedCurrentLine ? (
+                                                                <span style={{ fontSize: "11px", background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: "10px", fontWeight: "bold" }}>
+                                                                    ✓ Đã vào: {nv.ten_cong_doan}
+                                                                </span>
+                                                            ) : isAssignedOtherLine ? (
+                                                                <span style={{ fontSize: "11px", background: "#fef3c7", color: "#b45309", padding: "2px 8px", borderRadius: "10px", fontWeight: "bold" }}>
+                                                                    🔄 Đã gán ở {nv.ten_day_chuyen_phan_cong}
+                                                                </span>
+                                                            ) : (
+                                                                <span style={{ fontSize: "11px", background: "#f1f5f9", color: "#64748b", padding: "2px 8px", borderRadius: "10px" }}>
+                                                                    ⏳ Chưa gán
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                    ) : (
-                                                        assignedInProcess.map((staff) => {
-                                                            const hasMatchingCert = (staff.ky_nang_list || []).some(
-                                                                c => c.ten_chung_chi.toLowerCase() === tenChungChiYeuCau.toLowerCase()
-                                                            );
 
-                                                            return (
-                                                                <div
-                                                                    key={staff.nhan_vien_id}
+                                                        <div style={{ fontSize: "12px", color: "#475569", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                            <span>
+                                                                Line gốc: <strong style={{ color: isSameLine ? "#15803d" : "#475569" }}>{nv.ten_day_chuyen_goc || "Chưa gán"}</strong>
+                                                            </span>
+                                                            <span>Ca đăng ký OT: <strong>{nv.ten_ca}</strong></span>
+                                                        </div>
+
+                                                        {/* Danh sách Chứng chỉ / Kỹ năng */}
+                                                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "2px" }}>
+                                                            {nv.ky_nang_list && nv.ky_nang_list.length > 0 ? (
+                                                                nv.ky_nang_list.map((kn, idx) => (
+                                                                    <span
+                                                                        key={idx}
+                                                                        style={{
+                                                                            fontSize: "11px",
+                                                                            background: "#e0f2fe",
+                                                                            color: "#0369a1",
+                                                                            padding: "1px 6px",
+                                                                            borderRadius: "4px",
+                                                                            fontWeight: "500"
+                                                                        }}
+                                                                    >
+                                                                        🎓 {kn.ten_chung_chi} (Cấp {kn.cap_do})
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>Lao động phổ thông</span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Chọn nhanh công đoạn để gán nếu chưa gán hoặc gỡ gán */}
+                                                        {laLeader && chiTietDayChuyen && chiTietDayChuyen.yeu_cau_nhan_su && (
+                                                            <div style={{ marginTop: "6px", display: "flex", gap: "8px", alignItems: "center" }}>
+                                                                <select
+                                                                    value={isAssignedCurrentLine ? nv.cong_doan_id : ""}
+                                                                    onChange={(e) => xuLyPhanBo(nv.nhan_vien_id, e.target.value)}
+                                                                    style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "4px", border: "1px solid #cbd5e1", flex: 1 }}
+                                                                >
+                                                                    <option value="">-- Xếp vào Công đoạn của Line này --</option>
+                                                                    {chiTietDayChuyen.yeu_cau_nhan_su.map((yc) => (
+                                                                        <option key={yc.cong_doan_id} value={yc.cong_doan_id}>
+                                                                            📌 {yc.ten_cong_doan} (Nhu cầu: {yc.so_luong_can} người)
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                                {nv.phan_cong_id && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => xuLyGoPhanBo(nv.nhan_vien_id)}
+                                                                        style={{ fontSize: "11px", color: "#dc2626", background: "#fef2f2", border: "1px solid #fca5a5", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" }}
+                                                                        title="Gỡ phân công"
+                                                                    >
+                                                                        Gỡ gán
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* CỘT PHẢI: SƠ ĐỒ ĐỊNH BIÊN CÔNG ĐOẠN DÂY CHUYỀN */}
+                                <div className="the-thong-tin" style={{ margin: 0, padding: "20px" }}>
+                                    <h3 style={{ margin: "0 0 16px", fontSize: "16px", color: "var(--charcoal)" }}>
+                                        🏭 Công đoạn Sản xuất Line: {chiTietDayChuyen?.ten_day_chuyen || "Đang tải..."}
+                                    </h3>
+
+                                    {!chiTietDayChuyen || !chiTietDayChuyen.yeu_cau_nhan_su || chiTietDayChuyen.yeu_cau_nhan_su.length === 0 ? (
+                                        <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                                            Dây chuyền này chưa được cấu hình định biên công đoạn sản xuất
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                            {chiTietDayChuyen.yeu_cau_nhan_su.map((cd) => {
+                                                // Tìm danh sách nhân viên đã được gán vào công đoạn này trong ca/ngày hiện tại
+                                                const assignedInProcess = danhSachNhanSuTangCa.filter(
+                                                    (x) => x.phan_cong_id &&
+                                                        String(x.phan_cong_day_chuyen_id) === String(dayChuyenId) &&
+                                                        Number(x.cong_doan_id) === Number(cd.cong_doan_id)
+                                                );
+
+                                                const neededCount = cd.so_luong_can;
+                                                const currentCount = assignedInProcess.length;
+                                                const isFilled = currentCount >= neededCount;
+
+                                                const tenChungChiYeuCau = cd.ten_cong_doan.replace(/\s+\d+$/, "").trim();
+
+                                                return (
+                                                    <div
+                                                        key={cd.cong_doan_id}
+                                                        style={{
+                                                            border: `1px solid ${isFilled ? "#86efac" : "#fde68a"}`,
+                                                            borderRadius: "var(--radius)",
+                                                            background: "#fff",
+                                                            padding: "14px",
+                                                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+                                                        }}
+                                                    >
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                                                            <div>
+                                                                <strong style={{ fontSize: "15px", color: "var(--charcoal)" }}>📌 {cd.ten_cong_doan}</strong>
+                                                                <span style={{ fontSize: "12px", color: "#64748b", display: "block", marginTop: "2px" }}>
+                                                                    Yêu cầu CC kỹ năng: <span style={{ color: "#0284c7", fontWeight: "600" }}>{tenChungChiYeuCau}</span>
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ textAlign: "right" }}>
+                                                                <span
                                                                     style={{
-                                                                        display: "flex",
-                                                                        justifyContent: "space-between",
-                                                                        alignItems: "center",
-                                                                        padding: "6px 10px",
-                                                                        background: "#f0fdf4",
-                                                                        border: "1px solid #bbf7d0",
-                                                                        borderRadius: "6px",
-                                                                        fontSize: "12.5px"
+                                                                        fontSize: "13px",
+                                                                        fontWeight: "bold",
+                                                                        color: isFilled ? "#15803d" : "#b45309",
+                                                                        background: isFilled ? "#dcfce7" : "#fef3c7",
+                                                                        padding: "4px 10px",
+                                                                        borderRadius: "12px"
                                                                     }}
                                                                 >
-                                                                    <div>
-                                                                        <strong style={{ color: "#166534" }}>{staff.ho_ten}</strong>
-                                                                        <span style={{ fontSize: "11px", color: "#64748b", marginLeft: "6px" }}>
-                                                                            ({staff.ma_nhan_vien})
-                                                                        </span>
-                                                                        {hasMatchingCert ? (
-                                                                            <span style={{ fontSize: "10px", background: "#e0f2fe", color: "#0369a1", padding: "1px 5px", borderRadius: "4px", marginLeft: "6px" }}>
-                                                                                🎓 Đạt chứng chỉ
-                                                                            </span>
-                                                                        ) : (
-                                                                            <span style={{ fontSize: "10px", background: "#fef3c7", color: "#b45309", padding: "1px 5px", borderRadius: "4px", marginLeft: "6px" }}>
-                                                                                ⚠️ Phân bổ linh hoạt
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
+                                                                    {currentCount} / {neededCount} người
+                                                                </span>
+                                                            </div>
+                                                        </div>
 
-                                                                    {laLeader && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => xuLyGoPhanBo(staff.nhan_vien_id)}
-                                                                            style={{ fontSize: "11px", color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: "bold" }}
-                                                                        >
-                                                                            ✕ Gỡ
-                                                                        </button>
-                                                                    )}
+                                                        {/* Danh sách nhân viên đang xếp vào công đoạn này */}
+                                                        <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                                                            {assignedInProcess.length === 0 ? (
+                                                                <div style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic", padding: "6px", background: "#f8fafc", borderRadius: "4px" }}>
+                                                                    Chưa có nhân sự nào được phân bổ vào công đoạn này
                                                                 </div>
-                                                            );
-                                                        })
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </>
-            )}
+                                                            ) : (
+                                                                assignedInProcess.map((staff) => {
+                                                                    const hasMatchingCert = (staff.ky_nang_list || []).some(
+                                                                        c => c.ten_chung_chi.toLowerCase() === tenChungChiYeuCau.toLowerCase()
+                                                                    );
 
-            {/* TAB 2: THỐNG KÊ LỊCH SỬ PHÂN BỔ TĂNG CA theo Ngày Tháng Năm */}
-            {tabChinh === "LICH_SU" && (
-                <>
-                    {/* Thanh Lọc Nhật Ký Lịch Sử Phân Bổ */}
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "12px",
-                            marginBottom: "16px",
-                            flexWrap: "wrap",
-                            background: "#fff",
-                            padding: "14px 16px",
-                            borderRadius: "var(--radius)",
-                            border: "1px solid #e2e5ea",
-                            alignItems: "center"
-                        }}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <label style={{ fontSize: "13px", fontWeight: "bold" }}>📅 Từ ngày:</label>
-                            <input
-                                type="date"
-                                value={tuNgayLichSu}
-                                onChange={(e) => setTuNgayLichSu(e.target.value)}
-                                style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                            />
-                        </div>
+                                                                    return (
+                                                                        <div
+                                                                            key={staff.nhan_vien_id}
+                                                                            style={{
+                                                                                display: "flex",
+                                                                                justifyContent: "space-between",
+                                                                                alignItems: "center",
+                                                                                padding: "6px 10px",
+                                                                                background: "#f0fdf4",
+                                                                                border: "1px solid #bbf7d0",
+                                                                                borderRadius: "6px",
+                                                                                fontSize: "12.5px"
+                                                                            }}
+                                                                        >
+                                                                            <div>
+                                                                                <strong style={{ color: "#166534" }}>{staff.ho_ten}</strong>
+                                                                                <span style={{ fontSize: "11px", color: "#64748b", marginLeft: "6px" }}>
+                                                                                    ({staff.ma_nhan_vien})
+                                                                                </span>
+                                                                                {hasMatchingCert ? (
+                                                                                    <span style={{ fontSize: "10px", background: "#e0f2fe", color: "#0369a1", padding: "1px 5px", borderRadius: "4px", marginLeft: "6px" }}>
+                                                                                        🎓 Đạt chứng chỉ
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    <span style={{ fontSize: "10px", background: "#fef3c7", color: "#b45309", padding: "1px 5px", borderRadius: "4px", marginLeft: "6px" }}>
+                                                                                        ⚠️ Phân bổ linh hoạt
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <label style={{ fontSize: "13px", fontWeight: "bold" }}>📅 Đến ngày:</label>
-                            <input
-                                type="date"
-                                value={denNgayLichSu}
-                                onChange={(e) => setDenNgayLichSu(e.target.value)}
-                                style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                            />
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <label style={{ fontSize: "13px", fontWeight: "bold" }}>Tháng:</label>
-                            <select
-                                value={thangLichSu}
-                                onChange={(e) => setThangLichSu(e.target.value)}
-                                style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
-                            >
-                                <option value="">-- Cả năm --</option>
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
-                                    <option key={m} value={m}>Tháng {m}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <label style={{ fontSize: "13px", fontWeight: "bold" }}>Năm:</label>
-                            <input
-                                type="number"
-                                value={namLichSu}
-                                onChange={(e) => setNamLichSu(e.target.value)}
-                                style={{ width: "80px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                            />
-                        </div>
-
-                        <select
-                            value={hanhDongLichSu}
-                            onChange={(e) => setHanhDongLichSu(e.target.value)}
-                            style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
-                        >
-                            <option value="ALL">-- Tất cả loại phân bổ --</option>
-                            <option value="PHAN_BO">Phân bổ thủ công</option>
-                            <option value="GO_PHAN_BO">Gỡ phân bổ</option>
-                            <option value="TU_DONG_PHAN_BO">Tự động phân bổ</option>
-                        </select>
-
-                        <div style={{ flex: 1, minWidth: "180px" }}>
-                            <input
-                                type="text"
-                                placeholder="🔍 Tìm theo Dây chuyền, Công đoạn hoặc Tên NV..."
-                                value={tuKhoaLichSu}
-                                onChange={(e) => setTuKhoaLichSu(e.target.value)}
-                                style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Bảng Nhật ký Lịch sử Phân bổ Tăng ca */}
-                    <div className="khong-gian-bang">
-                        {dangTaiLichSu ? (
-                            <div className="trang-thai-rong">Đang tải nhật ký lịch sử phân bổ...</div>
-                        ) : loiLichSu ? (
-                            <div className="thong-bao-loi">{loiLichSu}</div>
-                        ) : (
-                            <table className="bang-du-lieu">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: "50px", textAlign: "center" }}>STT</th>
-                                        <th style={{ width: "160px" }}>Thời gian</th>
-                                        <th style={{ width: "180px" }}>Người thực hiện / Quản lý</th>
-                                        <th style={{ width: "130px" }}>Hành động</th>
-                                        <th style={{ width: "220px" }}>Đối tượng phân bổ</th>
-                                        <th>Chi tiết (Dây chuyền, Công đoạn, Chứng chỉ, Nhân sự...)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {danhSachLichSu.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} className="trang-thai-rong">
-                                                Chưa có lịch sử phân bổ tăng ca nào phù hợp với bộ lọc ngày tháng năm này
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        danhSachLichSu.map((item, index) => (
-                                            <tr key={item.id}>
-                                                <td style={{ textAlign: "center" }}>{index + 1}</td>
-                                                <td>
-                                                    <strong style={{ fontSize: "12px", color: "var(--charcoal)" }}>
-                                                        {new Date(item.thoi_gian).toLocaleString("vi-VN")}
-                                                    </strong>
-                                                </td>
-                                                <td>
-                                                    <strong>{item.nguoi_thuc_hien || "Hệ thống"}</strong>
-                                                    <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>
-                                                        ({item.role_nguoi_thuc_hien || "ADMIN"})
-                                                    </span>
-                                                </td>
-                                                <td>{renderHanhDongBadge(item.hanh_dong)}</td>
-                                                <td>
-                                                    <strong style={{ color: "#0369a1", fontSize: "13px" }}>{item.ten_doi_tuong}</strong>
-                                                </td>
-                                                <td style={{ fontSize: "12.5px", lineHeight: "1.5", color: "#334155" }}>
-                                                    {item.chi_tiet}
-                                                </td>
-                                            </tr>
-                                        ))
+                                                                            {laLeader && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => xuLyGoPhanBo(staff.nhan_vien_id)}
+                                                                                    style={{ fontSize: "11px", color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: "bold" }}
+                                                                                >
+                                                                                    ✕ Gỡ
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     )}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                </>
-            )}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* TAB 2: THỐNG KÊ LỊCH SỬ PHÂN BỔ TĂNG CA theo Ngày Tháng Năm */}
+                    {tabChinh === "LICH_SU" && (
+                        <>
+                            {/* Thanh Lọc Nhật Ký Lịch Sử Phân Bổ */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "12px",
+                                    marginBottom: "16px",
+                                    flexWrap: "wrap",
+                                    background: "#fff",
+                                    padding: "14px 16px",
+                                    borderRadius: "var(--radius)",
+                                    border: "1px solid #e2e5ea",
+                                    alignItems: "center"
+                                }}
+                            >
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>📅 Từ ngày:</label>
+                                    <input
+                                        type="date"
+                                        value={tuNgayLichSu}
+                                        onChange={(e) => setTuNgayLichSu(e.target.value)}
+                                        style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
+                                    />
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>📅 Đến ngày:</label>
+                                    <input
+                                        type="date"
+                                        value={denNgayLichSu}
+                                        onChange={(e) => setDenNgayLichSu(e.target.value)}
+                                        style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
+                                    />
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>Tháng:</label>
+                                    <select
+                                        value={thangLichSu}
+                                        onChange={(e) => setThangLichSu(e.target.value)}
+                                        style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
+                                    >
+                                        <option value="">-- Cả năm --</option>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
+                                            <option key={m} value={m}>Tháng {m}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <label style={{ fontSize: "13px", fontWeight: "bold" }}>Năm:</label>
+                                    <input
+                                        type="number"
+                                        value={namLichSu}
+                                        onChange={(e) => setNamLichSu(e.target.value)}
+                                        style={{ width: "80px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
+                                    />
+                                </div>
+
+                                <select
+                                    value={hanhDongLichSu}
+                                    onChange={(e) => setHanhDongLichSu(e.target.value)}
+                                    style={{ padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)", background: "#fff" }}
+                                >
+                                    <option value="ALL">-- Tất cả loại phân bổ --</option>
+                                    <option value="PHAN_BO">Phân bổ thủ công</option>
+                                    <option value="GO_PHAN_BO">Gỡ phân bổ</option>
+                                    <option value="TU_DONG_PHAN_BO">Tự động phân bổ</option>
+                                </select>
+
+                                <div style={{ flex: 1, minWidth: "180px" }}>
+                                    <input
+                                        type="text"
+                                        placeholder="🔍 Tìm theo Dây chuyền, Công đoạn hoặc Tên NV..."
+                                        value={tuKhoaLichSu}
+                                        onChange={(e) => setTuKhoaLichSu(e.target.value)}
+                                        style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", borderRadius: "var(--radius)" }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Bảng Nhật ký Lịch sử Phân bổ Tăng ca */}
+                            <div className="khong-gian-bang">
+                                {dangTaiLichSu ? (
+                                    <div className="trang-thai-rong">Đang tải nhật ký lịch sử phân bổ...</div>
+                                ) : loiLichSu ? (
+                                    <div className="thong-bao-loi">{loiLichSu}</div>
+                                ) : (
+                                    <table className="bang-du-lieu">
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: "50px", textAlign: "center" }}>STT</th>
+                                                <th style={{ width: "160px" }}>Thời gian</th>
+                                                <th style={{ width: "180px" }}>Người thực hiện / Quản lý</th>
+                                                <th style={{ width: "130px" }}>Hành động</th>
+                                                <th style={{ width: "220px" }}>Đối tượng phân bổ</th>
+                                                <th>Chi tiết (Dây chuyền, Công đoạn, Chứng chỉ, Nhân sự...)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {danhSachLichSu.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} className="trang-thai-rong">
+                                                        Chưa có lịch sử phân bổ tăng ca nào phù hợp với bộ lọc ngày tháng năm này
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                danhSachLichSu.map((item, index) => (
+                                                    <tr key={item.id}>
+                                                        <td style={{ textAlign: "center" }}>{index + 1}</td>
+                                                        <td>
+                                                            <strong style={{ fontSize: "12px", color: "var(--charcoal)" }}>
+                                                                {new Date(item.thoi_gian).toLocaleString("vi-VN")}
+                                                            </strong>
+                                                        </td>
+                                                        <td>
+                                                            <strong>{item.nguoi_thuc_hien || "Hệ thống"}</strong>
+                                                            <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>
+                                                                ({item.role_nguoi_thuc_hien || "ADMIN"})
+                                                            </span>
+                                                        </td>
+                                                        <td>{renderHanhDongBadge(item.hanh_dong)}</td>
+                                                        <td>
+                                                            <strong style={{ color: "#0369a1", fontSize: "13px" }}>{item.ten_doi_tuong}</strong>
+                                                        </td>
+                                                        <td style={{ fontSize: "12.5px", lineHeight: "1.5", color: "#334155" }}>
+                                                            {item.chi_tiet}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </>
+                    )}
         </div>
     );
 }

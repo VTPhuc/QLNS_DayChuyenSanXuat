@@ -47,6 +47,23 @@ class DayChuyenService {
 
         query += " ORDER BY dc.id DESC";
         const [rows] = await pool.query(query, params);
+
+        // Lấy danh sách các công đoạn sản xuất thuộc từng dây chuyền
+        for (const dc of rows) {
+            const [boPhans] = await pool.query(
+                `SELECT cd.id AS cong_doan_id, cd.ten_cong_doan, yc.so_luong_can, yc.so_luong_min, yc.so_luong_max
+                 FROM yeu_cau_nhan_su yc
+                 JOIN cong_doan cd ON yc.cong_doan_id = cd.id
+                 WHERE yc.day_chuyen_id = ?
+                 ORDER BY cd.id ASC`,
+                [dc.id]
+            );
+            dc.cong_doan_list = boPhans;
+            dc.bo_phan = boPhans;
+            dc.ds_cong_doan = boPhans;
+            dc.cac_cong_doan = boPhans;
+        }
+
         return rows;
     }
 

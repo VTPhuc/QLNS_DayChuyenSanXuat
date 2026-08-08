@@ -4,11 +4,7 @@ import pool from "../config/db.js";
  * Model quản lý dữ liệu nhân viên
  */
 class NhanVienModel {
-<<<<<<< HEAD
-    static async layDanhSachNhanVien({ q, day_chuyen_id, ca_lam_id, trang_thai }) {
-=======
     static async layDanhSachNhanVien({ q, day_chuyen_id, ca_lam_id, trang_thai } = {}) {
->>>>>>> upstream/main
         let sql = `
             SELECT nv.*, dc.ten_day_chuyen, cl.ten_ca AS ten_ca_lam, tk.ten_dang_nhap, tk.email
             FROM nhan_vien nv

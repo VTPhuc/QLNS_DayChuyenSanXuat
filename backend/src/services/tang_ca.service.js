@@ -89,7 +89,7 @@ class TangCaService {
 
         const [rows] = await pool.query(sql, params);
 
-        // Gán kỹ năng / chứng chỉ cho từng nhân viên
+        // Gán kỹ năng / chứng chỉ cho từng nhân viên và tính điểm cấp độ
         for (const item of rows) {
             const [skills] = await pool.query(
                 `SELECT ccnv.cap_do, cc.ten_chung_chi 
@@ -99,7 +99,16 @@ class TangCaService {
                 [item.id]
             );
             item.ky_nang_list = skills;
+            item.max_cap_do = skills.reduce((max, s) => Math.max(max, s.cap_do || 0), 0);
+            item.so_luong_chung_chi = skills.length;
         }
+
+        // Sắp xếp dựa vào chứng chỉ (Cấp độ cao hơn xếp trước, nhiều chứng chỉ hơn xếp trước)
+        rows.sort((a, b) => {
+            if (b.max_cap_do !== a.max_cap_do) return b.max_cap_do - a.max_cap_do;
+            if (b.so_luong_chung_chi !== a.so_luong_chung_chi) return b.so_luong_chung_chi - a.so_luong_chung_chi;
+            return a.ho_ten.localeCompare(b.ho_ten, 'vi');
+        });
 
         return rows;
     }
@@ -110,23 +119,14 @@ class TangCaService {
     static async layDanhSachDangKyTangCa({ ngay, day_chuyen_id, ca_lam_id, trang_thai, q, nguoiDung } = {}) {
         let sql = `
             SELECT dk.id, dk.nhan_vien_id, dk.ca_lam_id, dk.ngay, dk.trang_thai,
-<<<<<<< HEAD
-                   nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.so_dien_thoai, nv.day_chuyen_id, nv.ca_lam_id AS nv_ca_lam_id,
-=======
                    nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.so_dien_thoai, nv.day_chuyen_id, nv.ca_lam_id AS ca_lam_goc_id,
                    cl_goc.ten_ca AS ten_ca_goc,
->>>>>>> upstream/main
                    dc.ten_day_chuyen,
-                   cl.ten_ca, cl.gio_bat_dau, cl.gio_ket_thuc, cl.loai_ca,
-                   cl_nv.ten_ca AS ten_ca_goc
+                   cl.ten_ca, cl.gio_bat_dau, cl.gio_ket_thuc, cl.loai_ca
             FROM dang_ky_tang_ca dk
             JOIN nhan_vien nv ON dk.nhan_vien_id = nv.id
             JOIN ca_lam_viec cl ON dk.ca_lam_id = cl.id
-<<<<<<< HEAD
-            LEFT JOIN ca_lam_viec cl_nv ON nv.ca_lam_id = cl_nv.id
-=======
             LEFT JOIN ca_lam_viec cl_goc ON nv.ca_lam_id = cl_goc.id
->>>>>>> upstream/main
             LEFT JOIN day_chuyen dc ON nv.day_chuyen_id = dc.id
             WHERE 1=1
         `;
@@ -175,7 +175,7 @@ class TangCaService {
 
         const [rows] = await pool.query(sql, params);
 
-        // Đính kèm thông tin chứng chỉ/kỹ năng cho từng nhân viên
+        // Đính kèm thông tin chứng chỉ/kỹ năng cho từng nhân viên và tính điểm cấp độ
         for (const item of rows) {
             const [skills] = await pool.query(
                 `SELECT ccnv.cap_do, cc.ten_chung_chi 
@@ -185,7 +185,16 @@ class TangCaService {
                 [item.nhan_vien_id]
             );
             item.ky_nang_list = skills;
+            item.max_cap_do = skills.reduce((max, s) => Math.max(max, s.cap_do || 0), 0);
+            item.so_luong_chung_chi = skills.length;
         }
+
+        // Sắp xếp ưu tiên nhân sự có chứng chỉ cấp độ cao lên đầu danh sách
+        rows.sort((a, b) => {
+            if (b.max_cap_do !== a.max_cap_do) return b.max_cap_do - a.max_cap_do;
+            if (b.so_luong_chung_chi !== a.so_luong_chung_chi) return b.so_luong_chung_chi - a.so_luong_chung_chi;
+            return a.ho_ten.localeCompare(b.ho_ten, 'vi');
+        });
 
         return rows;
     }
@@ -396,11 +405,7 @@ class TangCaService {
 
         let sql = `
             SELECT dk.id AS dang_ky_id, dk.nhan_vien_id, dk.ca_lam_id, dk.ngay,
-<<<<<<< HEAD
-                   nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.day_chuyen_id AS day_chuyen_goc_id, nv.ca_lam_id AS nv_ca_lam_id,
-=======
                    nv.ma_nhan_vien, nv.ho_ten, nv.chuc_vu, nv.day_chuyen_id AS day_chuyen_goc_id, nv.ca_lam_id AS ca_lam_goc_id,
->>>>>>> upstream/main
                    dc_goc.ten_day_chuyen AS ten_day_chuyen_goc,
                    cl_goc.ten_ca AS ten_ca_goc,
                    cl.ten_ca, cl.gio_bat_dau, cl.gio_ket_thuc,
@@ -440,7 +445,7 @@ class TangCaService {
 
         const [rows] = await pool.query(sql, params);
 
-        // Lấy chứng chỉ & kỹ năng tay nghề của nhân sự
+        // Lấy chứng chỉ & kỹ năng tay nghề của nhân sự và tính toán sắp xếp
         for (const item of rows) {
             const [skills] = await pool.query(
                 `SELECT ccnv.cap_do, cc.ten_chung_chi, cc.id AS chung_chi_id
@@ -450,7 +455,16 @@ class TangCaService {
                 [item.nhan_vien_id]
             );
             item.ky_nang_list = skills;
+            item.max_cap_do = skills.reduce((max, s) => Math.max(max, s.cap_do || 0), 0);
+            item.so_luong_chung_chi = skills.length;
         }
+
+        // Sắp xếp ưu tiên nhân sự sở hữu chứng chỉ & cấp độ cao lên đầu danh sách
+        rows.sort((a, b) => {
+            if (b.max_cap_do !== a.max_cap_do) return b.max_cap_do - a.max_cap_do;
+            if (b.so_luong_chung_chi !== a.so_luong_chung_chi) return b.so_luong_chung_chi - a.so_luong_chung_chi;
+            return a.ho_ten.localeCompare(b.ho_ten, 'vi');
+        });
 
         return rows;
     }
